@@ -1,13 +1,15 @@
-# app/schemas/user_schema.py
+from app.extensions import ma
 from app.models.user import User
-from app import ma
+from .listing_schema import ListingSchema  
 
 class UserSchema(ma.SQLAlchemyAutoSchema):
+    listings = ma.Nested(ListingSchema, many=True)  
+
     class Meta:
         model = User
         load_instance = True
-        exclude = ("password_hash", "listings", "favorites")  # exclude relationships
+        exclude = ("password_hash", "favorites")
 
-# Initialize schema instances
+# Schema instances
 user_schema = UserSchema()
 users_schema = UserSchema(many=True)
