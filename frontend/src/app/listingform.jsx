@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function ListingForm() {
     const [title, setTitle] = useState("");
@@ -12,6 +13,7 @@ export default function ListingForm() {
     const [contacts, setContacts] = useState("");
     const [message, setMessage] = useState("");
     const [submitting, setSubmitting] = useState(false);
+    const router = useRouter();
 
     const handleSubmit = async (event) => {
         event.preventDefault();
@@ -47,6 +49,8 @@ export default function ListingForm() {
                 setImageUrl("");
                 setLocation("");
                 setContacts("");
+                // Redirect to homepage to see new listing
+                router.push("/");
             } else {
                 const data = await response.json().catch(() => ({}));
                 setMessage(data.error || `Submission failed (status ${response.status}).`);
