@@ -4,12 +4,11 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 
-// -------------------------
+
 // Auth Context
-// -------------------------
+
 const AuthContext = createContext();
 
-// Custom hook to consume AuthContext
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
@@ -18,9 +17,9 @@ export const useAuth = () => {
   return context;
 };
 
-// -------------------------
+
 // Auth Provider
-// -------------------------
+
 export const AuthProvider = ({ children }) => {
   const router = useRouter();
   const [user, setUser] = useState(null);       // User info
@@ -37,9 +36,9 @@ export const AuthProvider = ({ children }) => {
     setLoading(false);
   }, []);
 
-  // -------------------------
+
   // Login
-  // -------------------------
+  
   const login = async (email, password) => {
     try {
       const response = await axios.post(`${API_BASE_URL}/auth/login`, { email, password });
@@ -56,9 +55,8 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // -------------------------
+ 
   // Signup
-  // -------------------------
   const signup = async (formData) => {
     try {
       const response = await axios.post(`${API_BASE_URL}/auth/signup`, formData);
@@ -75,9 +73,8 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // -------------------------
   // Logout
-  // -------------------------
+  
   const logout = () => {
     setUser(null);
     localStorage.removeItem("user");
@@ -85,9 +82,8 @@ export const AuthProvider = ({ children }) => {
     router.push("/login");
   };
 
-  // -------------------------
   // Context Value
-  // -------------------------
+ 
   const value = {
     user,
     loading,
