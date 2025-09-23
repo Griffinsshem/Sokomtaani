@@ -2,37 +2,55 @@
 
 import { useEffect, useState } from "react";
 import { fetchFavorites, removeFavorite } from "../../lib/api";
+import ListingCard from "../../components/listingCard";
+import Link from "next/link";
 
 export default function FavoritesPage() {
   const [favorites, setFavorites] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [removingId, setRemovingId] = useState(null);
 
-  // Load favorites
   useEffect(() => {
+    let mounted = true;
     async function loadFavorites() {
       try {
         setLoading(true);
         const res = await fetchFavorites();
-        setFavorites(res.data);
+        if (!mounted) return;
+        setFavorites(res.data ?? []);
       } catch (err) {
         console.error("Error loading favorites:", err);
+        if (!mounted) return;
         setError("Failed to load favorites. Please try again.");
       } finally {
-        setLoading(false);
+        if (mounted) setLoading(false);
       }
     }
     loadFavorites();
+    return () => {
+      mounted = false;
+    };
   }, []);
 
-  // Remove favorite
-  const handleRemove = async (id) => {
+  const handleRemove = async (favorite) => {
+    const listingId = favorite?.listing?.id;
+    if (!listingId) {
+      alert("Cannot determine listing id for this favorite.");
+      return;
+    }
+
+    if (!confirm("Remove this listing from your favorites?")) return;
+
     try {
-      await removeFavorite(id);
-      setFavorites((prev) => prev.filter((f) => f.id !== id));
+      setRemovingId(listingId);
+      await removeFavorite(listingId);
+      setFavorites((prev) => prev.filter((f) => f.listing?.id !== listingId));
     } catch (err) {
       console.error("Error removing favorite:", err);
       alert("Failed to remove favorite. Try again.");
+    } finally {
+      setRemovingId(null);
     }
   };
 
@@ -41,7 +59,32 @@ export default function FavoritesPage() {
   }
 
   if (error) {
-    return <div className="p-6 text-center text-red-500">{error}</div>;
+    return (
+      <div className="p-6 text-center text-red-500">
+        {error}
+        <div className="mt-3">
+          <button
+            onClick={() => {
+              setError("");
+              setLoading(true);
+              (async () => {
+                try {
+                  const res = await fetchFavorites();
+                  setFavorites(res.data ?? []);
+                } catch (e) {
+                  setError("Failed to load favorites. Please try again.");
+                } finally {
+                  setLoading(false);
+                }
+              })();
+            }}
+            className="px-3 py-1 bg-green-600 text-white rounded"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -49,36 +92,22 @@ export default function FavoritesPage() {
       <h1 className="text-2xl font-bold mb-6">My Favorites</h1>
 
       {favorites.length === 0 ? (
-        <p className="text-gray-500">You don’t have any favorites yet.</p>
+        <div className="text-center">
+          <p className="text-gray-500">You don’t have any favorites yet.</p>
+          <Link href="/homepage" className="text-green-600 underline mt-3 inline-block">
+            Browse listings
+          </Link>
+        </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
           {favorites.map((fav) => (
-            <div
+            <ListingCard
               key={fav.id}
-              className="border rounded-lg p-4 shadow hover:shadow-md bg-white"
-            >
-              {fav.listing?.image_url && (
-                <img
-                  src={fav.listing.image_url}
-                  alt={fav.listing.title}
-                  className="w-full h-40 object-cover rounded"
-                />
-              )}
-              <h2 className="mt-3 font-semibold">{fav.listing?.title}</h2>
-              <p className="text-sm text-gray-600">{fav.listing?.description}</p>
-              {fav.listing?.price && (
-                <p className="mt-1 font-bold text-green-600">
-                  Ksh {fav.listing.price}
-                </p>
-              )}
-
-              <button
-                onClick={() => handleRemove(fav.id)}
-                className="mt-3 px-3 py-1 text-sm bg-red-500 text-white rounded hover:bg-red-600"
-              >
-                Remove
-              </button>
-            </div>
+              listing={fav.listing}
+              showRemoveFavorite={true}
+              removing={removingId === fav.listing?.id}
+              onRemoveFavorite={() => handleRemove(fav)}
+            />
           ))}
         </div>
       )}
