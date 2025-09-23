@@ -41,13 +41,24 @@ export default function Footer() {
         <div className="md:w-1/3">
           <h4 className="font-semibold mb-3">Contact</h4>
           <p className="text-sm flex items-center gap-2">
-            <Mail size={16} />{" "}
-            <a href="mailto:sokomtaani@gmail.com" className="underline">
+            <Mail size={16} />
+            <a
+              href="mailto:sokomtaani@gmail.com"
+              className="underline"
+              aria-label="Email SokoMtaani"
+            >
               sokomtaani@gmail.com
             </a>
           </p>
+
           <p className="text-sm mt-1 flex items-center gap-2">
-            <Phone size={16} /> +254 700 000 000
+            <Phone size={16} />
+            <a
+              href="tel:+254700000000"
+              aria-label="Call SokoMtaani"
+            >
+              +254 700 000 000
+            </a>
           </p>
         </div>
       </div>

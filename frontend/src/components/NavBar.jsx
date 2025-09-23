@@ -53,7 +53,11 @@ export default function NavBar({ user, onLogout }) {
     setMobileOpen(false);
   };
 
-  const isActive = (path) => pathname === path;
+  const isActive = (path) => {
+    if (!pathname) return false;
+    return pathname === path || pathname.startsWith(path + "/");
+  };
+
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -162,7 +166,12 @@ export default function NavBar({ user, onLogout }) {
             )}
 
             {/* Mobile menu button */}
-            <button className="sm:hidden p-2" onClick={() => setMobileOpen((s) => !s)}>
+            <button
+              className="sm:hidden p-2"
+              onClick={() => setMobileOpen((s) => !s)}
+              aria-label="Toggle navigation"
+              aria-expanded={mobileOpen}
+            >
               ☰
             </button>
           </div>
