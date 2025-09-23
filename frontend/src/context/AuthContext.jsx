@@ -4,9 +4,7 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 
-
 // Auth Context
-
 const AuthContext = createContext();
 
 export const useAuth = () => {
@@ -17,17 +15,15 @@ export const useAuth = () => {
   return context;
 };
 
-
 // Auth Provider
-
 export const AuthProvider = ({ children }) => {
   const router = useRouter();
-  const [user, setUser] = useState(null);       // User info
-  const [loading, setLoading] = useState(true); // Initial loading state
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
 
-  // Load user from localStorage on mount
+  // Load user from localStorage
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
     if (storedUser) {
@@ -36,9 +32,7 @@ export const AuthProvider = ({ children }) => {
     setLoading(false);
   }, []);
 
-
   // Login
-  
   const login = async (email, password) => {
     try {
       const response = await axios.post(`${API_BASE_URL}/auth/login`, { email, password });
@@ -55,7 +49,6 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
- 
   // Signup
   const signup = async (formData) => {
     try {
@@ -74,7 +67,6 @@ export const AuthProvider = ({ children }) => {
   };
 
   // Logout
-  
   const logout = () => {
     setUser(null);
     localStorage.removeItem("user");
@@ -82,14 +74,24 @@ export const AuthProvider = ({ children }) => {
     router.push("/login");
   };
 
+  // Forgot Password
+  const forgotPassword = async (email) => {
+    try {
+      await axios.post(`${API_BASE_URL}/auth/forgot-password`, { email });
+    } catch (error) {
+      console.error("Forgot password error:", error.response?.data || error.message);
+      throw error;
+    }
+  };
+
   // Context Value
- 
   const value = {
     user,
     loading,
     login,
     signup,
     logout,
+    forgotPassword, // <-- added for forgot password
     isAuthenticated: !!user,
   };
 
