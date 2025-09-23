@@ -1,10 +1,11 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
 import { useAuth } from "../../context/AuthContext";
+import { Eye, EyeOff } from "lucide-react";
 
 // Password Regex: 8+ chars, 1 uppercase, 1 lowercase, 1 number, 1 special char
 const passwordRegex =
@@ -33,6 +34,8 @@ const SignupSchema = Yup.object().shape({
 
 export default function SignupPage() {
   const { signup } = useAuth();
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const handleSignup = async (values, { setSubmitting, setErrors }) => {
     try {
@@ -55,7 +58,7 @@ export default function SignupPage() {
 
   return (
     <div className="relative min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 via-white to-green-100 overflow-hidden">
-      {/* Animated background blobs */}
+      {/* Background blobs */}
       <motion.div
         animate={{ y: [0, 20, 0] }}
         transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
@@ -151,15 +154,21 @@ export default function SignupPage() {
               </div>
 
               {/* Password */}
-              <div>
+              <div className="relative">
                 <Field
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   name="password"
                   placeholder="Password"
                   className="w-full px-4 py-3 border rounded-lg text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 bg-white/90"
                   onChange={handleChange}
                   value={values.password}
                 />
+                <div
+                  className="absolute right-3 top-3 cursor-pointer text-gray-500"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                </div>
                 <ErrorMessage
                   name="password"
                   component="div"
@@ -171,13 +180,19 @@ export default function SignupPage() {
               </div>
 
               {/* Confirm Password */}
-              <div>
+              <div className="relative">
                 <Field
-                  type="password"
+                  type={showConfirmPassword ? "text" : "password"}
                   name="confirmPassword"
                   placeholder="Confirm Password"
                   className="w-full px-4 py-3 border rounded-lg text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 bg-white/90"
                 />
+                <div
+                  className="absolute right-3 top-3 cursor-pointer text-gray-500"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                >
+                  {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                </div>
                 <ErrorMessage
                   name="confirmPassword"
                   component="div"
