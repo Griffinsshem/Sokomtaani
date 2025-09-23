@@ -1,10 +1,12 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
 import { useAuth } from "../../context/AuthContext";
+import { Eye, EyeOff } from "lucide-react";
+
 
 // Validation schema using Yup
 const LoginSchema = Yup.object().shape({
@@ -14,10 +16,10 @@ const LoginSchema = Yup.object().shape({
 
 export default function LoginPage() {
   const { login } = useAuth();
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleLogin = async (values, { setSubmitting, setErrors }) => {
     try {
-      // Pass email and password directly to login function
       await login(values.email, values.password);
     } catch (err) {
       console.error(err);
@@ -57,7 +59,7 @@ export default function LoginPage() {
           validationSchema={LoginSchema}
           onSubmit={handleLogin}
         >
-          {({ isSubmitting }) => (
+          {({ isSubmitting, values, handleChange }) => (
             <Form className="space-y-4 text-left">
               {/* Email */}
               <div>
@@ -74,14 +76,22 @@ export default function LoginPage() {
                 />
               </div>
 
-              {/* Password */}
-              <div>
+              {/* Password with eye toggle */}
+              <div className="relative">
                 <Field
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   name="password"
                   placeholder="Password"
                   className="w-full px-4 py-3 border rounded-lg text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 bg-white/90"
+                  onChange={handleChange}
+                  value={values.password}
                 />
+                <div
+                  className="absolute right-3 top-3 cursor-pointer text-gray-500"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                </div>
                 <ErrorMessage
                   name="password"
                   component="div"
@@ -103,7 +113,15 @@ export default function LoginPage() {
           )}
         </Formik>
 
+        {/* Forgot Password */}
         <p className="mt-4 text-sm text-gray-600 text-center">
+          <a href="/forgot-password" className="text-green-600 font-medium hover:underline">
+            Forgot Password?
+          </a>
+        </p>
+
+        {/* Sign Up Link */}
+        <p className="mt-2 text-sm text-gray-600 text-center">
           Don't have an account?{" "}
           <a href="/signup" className="text-green-600 font-medium hover:underline">
             Sign Up
