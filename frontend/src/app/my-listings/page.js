@@ -25,7 +25,11 @@ export default function MyListingsPage() {
   };
 
   useEffect(() => {
-    if (token) fetchListings();
+    if (!token) {
+      setLoading(false);
+      return;
+    }
+    fetchListings();
   }, [token]);
 
   // Mark a listing as sold
@@ -55,6 +59,10 @@ export default function MyListingsPage() {
   };
 
   if (loading) return <p className="text-center mt-10">Loading your listings...</p>;
+
+  if (!token) {
+    return <p className="text-center mt-10">Please log in to view your listings.</p>;
+  }
 
   return (
     <div className="p-6 max-w-4xl mx-auto">
