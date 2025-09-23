@@ -5,7 +5,9 @@ from app.models.user import User
 from app.schemas.listing_schema import listing_schema, listings_schema
 from flask_jwt_extended import jwt_required, get_jwt_identity
 
+
 listings_bp = Blueprint("listings", __name__)
+
 
 # get all listings (homepage)
 
@@ -56,4 +58,6 @@ def create_listing():
     db.session.add(new_listing)
     db.session.commit()
 
+
     return listing_schema.jsonify(new_listing), 201
+
