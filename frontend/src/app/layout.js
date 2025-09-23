@@ -1,22 +1,25 @@
+// src/app/layout.js
 import "./globals.css";
-import { Geist, Geist_Mono } from "next/font/google";
-import { AuthProvider } from "@/context/AuthContext";
-
-// Load fonts for server-side usage
-const geistSans = Geist({ subsets: ["latin"] });
-const geistMono = Geist_Mono({ subsets: ["latin"] });
+import NavBar from "../components/Navbar";
+import Footer from "../components/Footer";
+import CategoryFilter from "../components/CategoryFilter";
+import { AuthProvider } from "../context/AuthContext";
 
 export const metadata = {
-  title: "Sokomtaani",
-  description: "Post and browse listings",
+  title: "SokoMtaani",
+  description: "Your marketplace app",
 };
 
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      {/* Use .className instead of .variable */}
-      <body suppressHydrationWarning className={`${geistSans.className} ${geistMono.className} antialiased`}>
-        <AuthProvider>{children}</AuthProvider>
+      <body>
+        <AuthProvider>
+          <NavBar />
+          <CategoryFilter />
+          <main>{children}</main>
+          <Footer />
+        </AuthProvider>
       </body>
     </html>
   );

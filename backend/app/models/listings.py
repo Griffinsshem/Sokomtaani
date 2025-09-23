@@ -2,7 +2,8 @@ from app.extensions import db
 from datetime import datetime
 
 class Listing(db.Model):
-    _tablename_ = "listings"
+    __tablename__ = "listings"
+
 
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(150), nullable=False)
@@ -29,3 +30,4 @@ class Listing(db.Model):
         lazy=True,
         cascade="all, delete-orphan"
     )
+
