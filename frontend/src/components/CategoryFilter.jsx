@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { fetchCategories } from "../lib/api";
 
 export default function CategoryFilter({ value, onChange }) {
   const [categories, setCategories] = useState([]);
