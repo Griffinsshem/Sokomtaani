@@ -91,7 +91,6 @@ const HomePage = () => {
           </div>
         )}
       </main>
-      <CategoryFilter />
       <Footer />
     </div>
   );
