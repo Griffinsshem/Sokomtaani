@@ -4,30 +4,36 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 
-// Auth Context
+// Create Context
 const AuthContext = createContext();
 
-export const useAuth = () => {
+// Custom Hook
+export function useAuth() {
   const context = useContext(AuthContext);
   if (!context) {
     throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
-};
+}
 
-// Auth Provider
-export const AuthProvider = ({ children }) => {
+// Provider Component
+export function AuthProvider({ children }) {
   const router = useRouter();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+  const API_BASE_URL =
+    process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
 
-  // Load user from localStorage
+  // Load user from localStorage on first render
   useEffect(() => {
-    const storedUser = localStorage.getItem("user");
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
+    try {
+      const storedUser = localStorage.getItem("user");
+      if (storedUser) {
+        setUser(JSON.parse(storedUser));
+      }
+    } catch (err) {
+      console.error("Failed to load user from storage:", err);
     }
     setLoading(false);
   }, []);
@@ -35,7 +41,10 @@ export const AuthProvider = ({ children }) => {
   // Login
   const login = async (email, password) => {
     try {
-      const response = await axios.post(`${API_BASE_URL}/auth/login`, { email, password });
+      const response = await axios.post(`${API_BASE_URL}/auth/login`, {
+        email,
+        password,
+      });
       const { user, access_token } = response.data;
 
       setUser(user);
@@ -52,7 +61,10 @@ export const AuthProvider = ({ children }) => {
   // Signup
   const signup = async (formData) => {
     try {
-      const response = await axios.post(`${API_BASE_URL}/auth/signup`, formData);
+      const response = await axios.post(
+        `${API_BASE_URL}/auth/signup`,
+        formData
+      );
       const { user, access_token } = response.data;
 
       setUser(user);
@@ -79,7 +91,10 @@ export const AuthProvider = ({ children }) => {
     try {
       await axios.post(`${API_BASE_URL}/auth/forgot-password`, { email });
     } catch (error) {
-      console.error("Forgot password error:", error.response?.data || error.message);
+      console.error(
+        "Forgot password error:",
+        error.response?.data || error.message
+      );
       throw error;
     }
   };
@@ -91,9 +106,13 @@ export const AuthProvider = ({ children }) => {
     login,
     signup,
     logout,
-    forgotPassword, // <-- added for forgot password
+    forgotPassword,
     isAuthenticated: !!user,
   };
 
-  return <AuthContext.Provider value={value}>{!loading && children}</AuthContext.Provider>;
-};
+  return (
+    <AuthContext.Provider value={value}>
+      {!loading && children}
+    </AuthContext.Provider>
+  );
+}
