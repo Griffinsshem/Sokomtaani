@@ -24,13 +24,19 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// ✅ Add missing functions
+// ✅ Categories
 export async function fetchCategories() {
   return api.get("/categories");
 }
 
+// ✅ Favorites
 export async function fetchFavorites() {
   return api.get("/favorites");
+}
+
+// ✅ NEW: remove favorite
+export async function removeFavorite(id) {
+  return api.delete(`/favorites/${id}`);
 }
 
 // Keep default export for flexibility
