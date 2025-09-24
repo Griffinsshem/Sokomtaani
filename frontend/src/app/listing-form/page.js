@@ -1,47 +1,31 @@
-"use client"; 
+"use client";
+
 import { useState, useEffect } from "react";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../../context/AuthContext";
 import api from "../../lib/api";
-import NavBar from "../../components/NavBar"; 
+import NavBar from "../../components/NavBar";
+
+const STATIC_CATEGORIES = [
+  { id: "1", name: "Vegetables" },
+  { id: "2", name: "Fruits" },
+  { id: "3", name: "Livestock" },
+  { id: "4", name: "Seeds & Seedlings" },
+  { id: "5", name: "Farm Tools" },
+  { id: "6", name: "Cereals" },
+  { id: "7", name: "Agricultural Equipment" },
+];
 
 export default function ListingForm() {
   const { token } = useAuth();
   const router = useRouter();
   const [message, setMessage] = useState("");
   const [imageFile, setImageFile] = useState(null);
-  const [categories, setCategories] = useState([]);
+  const [categories, setCategories] = useState(STATIC_CATEGORIES);
 
-  // Fetch categories on mount
-  useEffect(() => {
-    async function fetchCategories() {
-      try {
-        const res = await api.get("/categories");
-        // Combine API categories with static ones
-        const staticCategories = [
-          { id: "static-veg", name: "Vegetables" },
-          { id: "static-fruits", name: "Fruits" },
-          { id: "static-livestock", name: "Livestock" },
-          { id: "static-seeds", name: "Seeds & Seedlings" },
-          { id: "static-tools", name: "Farm Tools" },
-        ];
-        setCategories([...staticCategories, ...res.data]);
-      } catch (err) {
-        console.error("Error fetching categories:", err);
-        // fallback to static categories if API fails
-        setCategories([
-          { id: "static-veg", name: "Vegetables" },
-          { id: "static-fruits", name: "Fruits" },
-          { id: "static-livestock", name: "Livestock" },
-          { id: "static-seeds", name: "Seeds & Seedlings" },
-          { id: "static-tools", name: "Farm Tools" },
-        ]);
-      }
-    }
-    fetchCategories();
-  }, []);
+  // Categories are static now; no fetch
 
   const formik = useFormik({
     initialValues: {
@@ -55,7 +39,10 @@ export default function ListingForm() {
     validationSchema: Yup.object({
       title: Yup.string().required("Title is required"),
       description: Yup.string().required("Description is required"),
-      price: Yup.number().positive("Price must be greater than 0").required("Price is required"),
+      price: Yup.number()
+        .typeError("Price must be a number")
+        .positive("Price must be greater than 0")
+        .required("Price is required"),
       category_id: Yup.string().required("Category is required"),
       location: Yup.string(),
       contacts: Yup.string().required("Contacts are required"),
@@ -63,17 +50,11 @@ export default function ListingForm() {
     onSubmit: async (values) => {
       try {
         const formData = new FormData();
-        formData.append("title", values.title);
-        formData.append("description", values.description);
-        formData.append("price", values.price);
-        formData.append("category_id", values.category_id);
-        formData.append("location", values.location);
-        formData.append("contacts", values.contacts);
+        Object.keys(values).forEach((key) => formData.append(key, values[key]));
         if (imageFile) formData.append("image", imageFile);
 
         await api.post("/listings", formData, {
           headers: {
-            Authorization: `Bearer ${token}`,
             "Content-Type": "multipart/form-data",
           },
         });
@@ -81,23 +62,30 @@ export default function ListingForm() {
         setMessage("✅ Listing created successfully!");
         formik.resetForm();
         setImageFile(null);
-        router.push("/my-listings"); 
+        router.push("/my-listings");
       } catch (err) {
-        setMessage("❌ Error: " + (err.response?.data?.error || "Something went wrong"));
+        // Surface precise backend error if available
+        const resp = err?.response?.data;
+        const status = err?.response?.status;
+        const statusText = err?.response?.statusText;
+        const backendMsg =
+          (resp && (resp.error || resp.message)) ||
+          (status ? `${status} ${statusText || ""}`.trim() : err.message || "Unknown error");
+        // eslint-disable-next-line no-console
+        console.error("Post listing error:", err?.response || err);
+        setMessage("❌ Error: " + backendMsg);
       }
     },
   });
 
   return (
     <div className="relative min-h-screen bg-gradient-to-br from-green-50 via-white to-green-100 overflow-hidden">
-      {/* Navbar */}
       <NavBar />
-
       <main className="relative z-10 p-6 max-w-lg mx-auto text-gray-800">
-        <h1 className="text-2xl font-bold mb-6 text-green-700">Post a New Listing</h1>
-
+        <h1 className="text-2xl font-bold mb-6 text-green-700">
+          Post a New Listing
+        </h1>
         <form onSubmit={formik.handleSubmit} className="space-y-4">
-          {/* Title */}
           <input
             type="text"
             name="title"
@@ -110,7 +98,6 @@ export default function ListingForm() {
             <div className="text-red-600 text-sm">{formik.errors.title}</div>
           )}
 
-          {/* Description */}
           <textarea
             name="description"
             placeholder="Describe your listing"
@@ -122,7 +109,6 @@ export default function ListingForm() {
             <div className="text-red-600 text-sm">{formik.errors.description}</div>
           )}
 
-          {/* Price */}
           <input
             type="number"
             name="price"
@@ -135,15 +121,13 @@ export default function ListingForm() {
             <div className="text-red-600 text-sm">{formik.errors.price}</div>
           )}
 
-          {/* Image Upload */}
           <input
             type="file"
-            name="image"
             accept="image/*"
             onChange={(e) => setImageFile(e.target.files[0])}
             className="border p-2 w-full rounded text-gray-700"
           />
-          {imageFile && (
+          {typeof window !== "undefined" && imageFile && (
             <img
               src={URL.createObjectURL(imageFile)}
               alt="Preview"
@@ -151,7 +135,6 @@ export default function ListingForm() {
             />
           )}
 
-          {/* Category Dropdown */}
           <select
             name="category_id"
             value={formik.values.category_id}
@@ -169,7 +152,6 @@ export default function ListingForm() {
             <div className="text-red-600 text-sm">{formik.errors.category_id}</div>
           )}
 
-          {/* Location */}
           <input
             type="text"
             name="location"
@@ -179,7 +161,6 @@ export default function ListingForm() {
             className="border p-2 w-full rounded text-black placeholder-gray-500"
           />
 
-          {/* Contacts */}
           <input
             type="text"
             name="contacts"
@@ -192,7 +173,6 @@ export default function ListingForm() {
             <div className="text-red-600 text-sm">{formik.errors.contacts}</div>
           )}
 
-          {/* Submit Button */}
           <button
             type="submit"
             className="bg-green-600 text-white px-4 py-2 rounded shadow hover:bg-green-700 transition"
@@ -200,8 +180,6 @@ export default function ListingForm() {
             Post Listing
           </button>
         </form>
-
-        {/* Message */}
         {message && <p className="mt-4 font-medium">{message}</p>}
       </main>
     </div>
