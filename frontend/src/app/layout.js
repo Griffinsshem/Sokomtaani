@@ -1,6 +1,6 @@
 // src/app/layout.js
 import "./globals.css";
-import { AuthProvider } from "../context/AuthContext";
+import ClientWrapper from "./ClientWrapper"; // Client-only wrapper
 
 export const metadata = {
   title: "Create Next App",
@@ -10,10 +10,8 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body>
-        <AuthProvider>
-          {children}
-        </AuthProvider>
+      <body suppressHydrationWarning>
+        <ClientWrapper>{children}</ClientWrapper>
       </body>
     </html>
   );

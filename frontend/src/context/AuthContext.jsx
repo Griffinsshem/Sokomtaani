@@ -38,7 +38,9 @@ export function AuthProvider({ children }) {
     setLoading(false);
   }, []);
 
+  // -----------------------------
   // Login
+  // -----------------------------
   const login = async (email, password) => {
     try {
       const response = await axios.post(`${API_BASE_URL}/auth/login`, {
@@ -53,12 +55,20 @@ export function AuthProvider({ children }) {
 
       router.push("/homepage");
     } catch (error) {
-      console.error("Login error:", error.response?.data || error.message);
-      throw error;
+      // Fix empty {} error: safely check for error.response
+      const message =
+        error.response?.data?.message ||
+        error.response?.data ||
+        error.message ||
+        "Unknown login error";
+      console.error("Login error:", message);
+      throw new Error(message); // Throw readable error
     }
   };
 
+  // -----------------------------
   // Signup
+  // -----------------------------
   const signup = async (formData) => {
     try {
       const response = await axios.post(
@@ -73,12 +83,19 @@ export function AuthProvider({ children }) {
 
       router.push("/homepage");
     } catch (error) {
-      console.error("Signup error:", error.response?.data || error.message);
-      throw error;
+      const message =
+        error.response?.data?.message ||
+        error.response?.data ||
+        error.message ||
+        "Unknown signup error";
+      console.error("Signup error:", message);
+      throw new Error(message);
     }
   };
 
+  // -----------------------------
   // Logout
+  // -----------------------------
   const logout = () => {
     setUser(null);
     localStorage.removeItem("user");
@@ -86,16 +103,20 @@ export function AuthProvider({ children }) {
     router.push("/login");
   };
 
+  // -----------------------------
   // Forgot Password
+  // -----------------------------
   const forgotPassword = async (email) => {
     try {
       await axios.post(`${API_BASE_URL}/auth/forgot-password`, { email });
     } catch (error) {
-      console.error(
-        "Forgot password error:",
-        error.response?.data || error.message
-      );
-      throw error;
+      const message =
+        error.response?.data?.message ||
+        error.response?.data ||
+        error.message ||
+        "Unknown forgot password error";
+      console.error("Forgot password error:", message);
+      throw new Error(message);
     }
   };
 

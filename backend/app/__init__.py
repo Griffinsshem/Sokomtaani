@@ -13,6 +13,19 @@ def create_app(config_class=DevelopmentConfig):
     ma.init_app(app)
     CORS(app)
 
+    # JWT error handlers for clearer responses
+    @jwt.unauthorized_loader
+    def _unauthorized_callback(err_str):
+        return ( {"error": f"Missing or invalid Authorization header: {err_str}"}, 401 )
+
+    @jwt.invalid_token_loader
+    def _invalid_token_callback(err_str):
+        return ( {"error": f"Invalid token: {err_str}"}, 422 )
+
+    @jwt.expired_token_loader
+    def _expired_token_callback(jwt_header, jwt_payload):
+        return ( {"error": "Token has expired"}, 401 )
+
     # Register blueprints
     from .routes.auth_route import auth_bp
     from .routes.listing_routes import listings_bp
