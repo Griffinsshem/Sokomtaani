@@ -10,6 +10,5 @@ class UserSchema(ma.SQLAlchemyAutoSchema):
         load_instance = True
         exclude = ("password_hash", "favorites")
 
-# Schema instances
 user_schema = UserSchema()
 users_schema = UserSchema(many=True)

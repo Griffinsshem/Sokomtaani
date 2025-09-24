@@ -8,25 +8,21 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 listings_bp = Blueprint("listings", __name__)
 
 # get all listings (homepage)
-
-@listings_bp.route("/", methods=["GET"])
+@listings_bp.route("", methods=["GET"])
 def get_all_listings():
     listings = Listing.query.order_by(Listing.created_at.desc()).all()
-    return listings_schema.jsonify(listings), 200
-
+    return jsonify(listings_schema.dump(listings)), 200
 
 # get listings for the current user
-
 @listings_bp.route("/my", methods=["GET"])
 @jwt_required()
 def get_my_listings():
     user_id = get_jwt_identity()
     listings = Listing.query.filter_by(user_id=user_id).order_by(Listing.created_at.desc()).all()
-    return listings_schema.jsonify(listings), 200
+    return jsonify(listings_schema.dump(listings)), 200
 
 # create a new listing
-
-@listings_bp.route("/", methods=["POST"])
+@listings_bp.route("", methods=["POST"])
 @jwt_required()
 def create_listing():
     data = request.get_json()
@@ -56,4 +52,4 @@ def create_listing():
     db.session.add(new_listing)
     db.session.commit()
 
-    return listing_schema.jsonify(new_listing), 201
+    return jsonify(listing_schema.dump(new_listing)), 201
