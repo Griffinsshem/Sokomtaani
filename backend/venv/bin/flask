@@ -1,4 +1,4 @@
-#!/home/vivian/moringa/phase-4/phase-4-project/Sokomtaani/backend/venv/bin/python3
+#!/home/devgriffins/Development/code/Sokomtaani/backend/venv/bin/python
 import sys
 from flask.cli import main
 if __name__ == '__main__':

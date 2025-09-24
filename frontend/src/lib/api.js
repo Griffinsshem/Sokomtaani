@@ -1,6 +1,5 @@
 import axios from "axios";
 
-// Create an Axios instance
 const api = axios.create({
   baseURL: "http://localhost:5000/api",
   headers: {
@@ -8,7 +7,6 @@ const api = axios.create({
   },
 });
 
-// Attach JWT token if available
 api.interceptors.request.use(
   (config) => {
     try {
@@ -24,17 +22,14 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// ✅ Categories
 export async function fetchCategories() {
-  return api.get("/categories");
+  return api.get("/categories/");
 }
 
-// ✅ Favorites
 export async function fetchFavorites() {
-  return api.get("/favorites");
+  return api.get("/favorites/");
 }
 
-// ✅ NEW: remove favorite
 export async function removeFavorite(id) {
   return api.delete(`/favorites/${id}`);
 }

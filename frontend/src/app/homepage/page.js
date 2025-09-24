@@ -4,6 +4,8 @@
 import React, { useEffect, useState } from "react";
 import ListingCard from "../../components/ListingCard";
 import Navbar from "../../components/NavBar";
+import Footer from "@/components/Footer";
+import CategoryFilter from "@/components/CategoryFilter";
 import api from "../../lib/api";
 import { motion } from "framer-motion";
 import { Search } from "lucide-react";
@@ -89,6 +91,8 @@ const HomePage = () => {
           </div>
         )}
       </main>
+      <CategoryFilter />
+      <Footer />
     </div>
   );
 };
