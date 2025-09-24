@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 export default function ListingForm() {
     const [title, setTitle] = useState("");
@@ -13,7 +13,6 @@ export default function ListingForm() {
     const [contacts, setContacts] = useState("");
     const [message, setMessage] = useState("");
     const [submitting, setSubmitting] = useState(false);
-    const router = useRouter();
 
     const handleSubmit = async (event) => {
         event.preventDefault();
@@ -49,8 +48,6 @@ export default function ListingForm() {
                 setImageUrl("");
                 setLocation("");
                 setContacts("");
-                // Redirect to homepage to see new listing
-                router.push("/");
             } else {
                 const data = await response.json().catch(() => ({}));
                 setMessage(data.error || `Submission failed (status ${response.status}).`);
@@ -197,7 +194,14 @@ export default function ListingForm() {
                         {submitting ? "Submitting..." : "Post Listing"}
                     </button>
                     {message && (
-                        <p style={{ marginTop: 8, color: isSuccess ? "#065f46" : "#b91c1c" }}>{message}</p>
+                        <div style={{ marginTop: 8, display: "flex", gap: 12, alignItems: "center" }}>
+                            <p style={{ color: isSuccess ? "#065f46" : "#b91c1c" }}>{message}</p>
+                            {isSuccess && (
+                                <Link href="/" style={{ color: "#2563eb", textDecoration: "underline" }}>
+                                    View on homepage
+                                </Link>
+                            )}
+                        </div>
                     )}
                 </form>
             </div>
