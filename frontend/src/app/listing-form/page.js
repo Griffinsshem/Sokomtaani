@@ -1,11 +1,11 @@
-"use client"; // must be first line
-
+"use client"; 
 import { useState, useEffect } from "react";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/context/AuthContext";
-import api from "@/lib/api";
+import { useAuth } from "../../context/AuthContext";
+import api from "../../lib/api";
+import NavBar from "../../components/NavBar"; 
 
 export default function ListingForm() {
   const { token } = useAuth();
@@ -19,9 +19,25 @@ export default function ListingForm() {
     async function fetchCategories() {
       try {
         const res = await api.get("/categories");
-        setCategories(res.data);
+        // Combine API categories with static ones
+        const staticCategories = [
+          { id: "static-veg", name: "Vegetables" },
+          { id: "static-fruits", name: "Fruits" },
+          { id: "static-livestock", name: "Livestock" },
+          { id: "static-seeds", name: "Seeds & Seedlings" },
+          { id: "static-tools", name: "Farm Tools" },
+        ];
+        setCategories([...staticCategories, ...res.data]);
       } catch (err) {
         console.error("Error fetching categories:", err);
+        // fallback to static categories if API fails
+        setCategories([
+          { id: "static-veg", name: "Vegetables" },
+          { id: "static-fruits", name: "Fruits" },
+          { id: "static-livestock", name: "Livestock" },
+          { id: "static-seeds", name: "Seeds & Seedlings" },
+          { id: "static-tools", name: "Farm Tools" },
+        ]);
       }
     }
     fetchCategories();
@@ -62,126 +78,132 @@ export default function ListingForm() {
           },
         });
 
-        setMessage("Listing created successfully!");
+        setMessage("✅ Listing created successfully!");
         formik.resetForm();
         setImageFile(null);
-        router.push("/my-listings"); // Redirect to My Listings
+        router.push("/my-listings"); 
       } catch (err) {
-        setMessage("Error: " + (err.response?.data?.error || "Something went wrong"));
+        setMessage("❌ Error: " + (err.response?.data?.error || "Something went wrong"));
       }
     },
   });
 
   return (
-    <div className="p-6 max-w-lg mx-auto">
-      <h1 className="text-xl font-bold mb-4">Post a New Listing</h1>
-      <form onSubmit={formik.handleSubmit} className="space-y-4">
-        {/* Title */}
-        <input
-          type="text"
-          name="title"
-          placeholder="Enter title"
-          value={formik.values.title}
-          onChange={formik.handleChange}
-          className="border p-2 w-full"
-        />
-        {formik.touched.title && formik.errors.title && (
-          <div className="text-red-500">{formik.errors.title}</div>
-        )}
+    <div className="relative min-h-screen bg-gradient-to-br from-green-50 via-white to-green-100 overflow-hidden">
+      {/* Navbar */}
+      <NavBar />
 
-        {/* Description */}
-        <textarea
-          name="description"
-          placeholder="Describe your listing"
-          value={formik.values.description}
-          onChange={formik.handleChange}
-          className="border p-2 w-full"
-        />
-        {formik.touched.description && formik.errors.description && (
-          <div className="text-red-500">{formik.errors.description}</div>
-        )}
+      <main className="relative z-10 p-6 max-w-lg mx-auto text-gray-800">
+        <h1 className="text-2xl font-bold mb-6 text-green-700">Post a New Listing</h1>
 
-        {/* Price */}
-        <input
-          type="number"
-          name="price"
-          placeholder="0.00"
-          value={formik.values.price}
-          onChange={formik.handleChange}
-          className="border p-2 w-full"
-        />
-        {formik.touched.price && formik.errors.price && (
-          <div className="text-red-500">{formik.errors.price}</div>
-        )}
-
-        {/* Image Upload */}
-        <input
-          type="file"
-          name="image"
-          accept="image/*"
-          onChange={(e) => setImageFile(e.target.files[0])}
-          className="border p-2 w-full"
-        />
-        {imageFile && (
-          <img
-            src={URL.createObjectURL(imageFile)}
-            alt="Preview"
-            className="mt-2 w-32 h-32 object-cover"
+        <form onSubmit={formik.handleSubmit} className="space-y-4">
+          {/* Title */}
+          <input
+            type="text"
+            name="title"
+            placeholder="Enter title"
+            value={formik.values.title}
+            onChange={formik.handleChange}
+            className="border p-2 w-full rounded text-black placeholder-gray-500"
           />
-        )}
+          {formik.touched.title && formik.errors.title && (
+            <div className="text-red-600 text-sm">{formik.errors.title}</div>
+          )}
 
-        {/* Category Dropdown */}
-        <select
-          name="category_id"
-          value={formik.values.category_id}
-          onChange={formik.handleChange}
-          className="border p-2 w-full"
-        >
-          <option value="">Select Category</option>
-          {categories.map((cat) => (
-            <option key={cat.id} value={cat.id}>
-              {cat.name}
-            </option>
-          ))}
-        </select>
-        {formik.touched.category_id && formik.errors.category_id && (
-          <div className="text-red-500">{formik.errors.category_id}</div>
-        )}
+          {/* Description */}
+          <textarea
+            name="description"
+            placeholder="Describe your listing"
+            value={formik.values.description}
+            onChange={formik.handleChange}
+            className="border p-2 w-full rounded text-black placeholder-gray-500"
+          />
+          {formik.touched.description && formik.errors.description && (
+            <div className="text-red-600 text-sm">{formik.errors.description}</div>
+          )}
 
-        {/* Location */}
-        <input
-          type="text"
-          name="location"
-          placeholder="Location"
-          value={formik.values.location}
-          onChange={formik.handleChange}
-          className="border p-2 w-full"
-        />
+          {/* Price */}
+          <input
+            type="number"
+            name="price"
+            placeholder="0.00"
+            value={formik.values.price}
+            onChange={formik.handleChange}
+            className="border p-2 w-full rounded text-black placeholder-gray-500"
+          />
+          {formik.touched.price && formik.errors.price && (
+            <div className="text-red-600 text-sm">{formik.errors.price}</div>
+          )}
 
-        {/* Contacts */}
-        <input
-          type="text"
-          name="contacts"
-          placeholder="Contacts (Email/Phone)"
-          value={formik.values.contacts}
-          onChange={formik.handleChange}
-          className="border p-2 w-full"
-        />
-        {formik.touched.contacts && formik.errors.contacts && (
-          <div className="text-red-500">{formik.errors.contacts}</div>
-        )}
+          {/* Image Upload */}
+          <input
+            type="file"
+            name="image"
+            accept="image/*"
+            onChange={(e) => setImageFile(e.target.files[0])}
+            className="border p-2 w-full rounded text-gray-700"
+          />
+          {imageFile && (
+            <img
+              src={URL.createObjectURL(imageFile)}
+              alt="Preview"
+              className="mt-2 w-32 h-32 object-cover rounded border"
+            />
+          )}
 
-        {/* Submit Button */}
-        <button
-          type="submit"
-          className="bg-blue-500 text-white px-4 py-2 rounded"
-        >
-          Post Listing
-        </button>
-      </form>
+          {/* Category Dropdown */}
+          <select
+            name="category_id"
+            value={formik.values.category_id}
+            onChange={formik.handleChange}
+            className="border p-2 w-full rounded text-black"
+          >
+            <option value="">Select Category</option>
+            {categories.map((cat) => (
+              <option key={cat.id} value={cat.id}>
+                {cat.name}
+              </option>
+            ))}
+          </select>
+          {formik.touched.category_id && formik.errors.category_id && (
+            <div className="text-red-600 text-sm">{formik.errors.category_id}</div>
+          )}
 
-      {/* Message */}
-      {message && <p className="mt-4">{message}</p>}
+          {/* Location */}
+          <input
+            type="text"
+            name="location"
+            placeholder="Location"
+            value={formik.values.location}
+            onChange={formik.handleChange}
+            className="border p-2 w-full rounded text-black placeholder-gray-500"
+          />
+
+          {/* Contacts */}
+          <input
+            type="text"
+            name="contacts"
+            placeholder="Contacts (Email/Phone)"
+            value={formik.values.contacts}
+            onChange={formik.handleChange}
+            className="border p-2 w-full rounded text-black placeholder-gray-500"
+          />
+          {formik.touched.contacts && formik.errors.contacts && (
+            <div className="text-red-600 text-sm">{formik.errors.contacts}</div>
+          )}
+
+          {/* Submit Button */}
+          <button
+            type="submit"
+            className="bg-green-600 text-white px-4 py-2 rounded shadow hover:bg-green-700 transition"
+          >
+            Post Listing
+          </button>
+        </form>
+
+        {/* Message */}
+        {message && <p className="mt-4 font-medium">{message}</p>}
+      </main>
     </div>
   );
 }

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { fetchFavorites, removeFavorite } from "../../lib/api";
-import ListingCard from "../../components/listingCard";
+import ListingCard from "../../components/ListingCard";
 import Link from "next/link";
 
 export default function FavoritesPage() {

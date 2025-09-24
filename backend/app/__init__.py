@@ -15,6 +15,13 @@ def create_app(config_class=DevelopmentConfig):
 
     # Register blueprints
     from .routes.auth_route import auth_bp
-    app.register_blueprint(auth_bp)
+    from .routes.listing_routes import listings_bp
+    from .routes.category_routes import categories_bp
+    from .routes.favorite_routes import favorites_bp
+
+    app.register_blueprint(auth_bp, url_prefix="/api/auth")
+    app.register_blueprint(listings_bp, url_prefix="/api/listings")
+    app.register_blueprint(categories_bp, url_prefix="/api/categories")
+    app.register_blueprint(favorites_bp, url_prefix="/api/favorites")
 
     return app
