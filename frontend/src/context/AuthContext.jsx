@@ -45,11 +45,11 @@ export function AuthProvider({ children }) {
         email,
         password,
       });
-      const { user, access_token } = response.data;
+      const { user, token } = response.data;
 
       setUser(user);
       localStorage.setItem("user", JSON.stringify(user));
-      localStorage.setItem("token", access_token);
+      localStorage.setItem("token", token);
 
       router.push("/homepage");
     } catch (error) {
@@ -65,11 +65,11 @@ export function AuthProvider({ children }) {
         `${API_BASE_URL}/auth/signup`,
         formData
       );
-      const { user, access_token } = response.data;
+      const { user, token } = response.data;
 
       setUser(user);
       localStorage.setItem("user", JSON.stringify(user));
-      localStorage.setItem("token", access_token);
+      localStorage.setItem("token", token);
 
       router.push("/homepage");
     } catch (error) {

@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify
+from flask import Blueprint, jsonify, request
 from app.extensions import db
 from app.models.favorite import Favorite
 from app.models.listings import Listing
@@ -34,7 +34,32 @@ def get_favorites():
             "listing": listing_data
         })
 
-    return jsonify({"data": results}), 200
+    return jsonify(results), 200
+
+
+
+@favorites_bp.route("/", methods=["POST"])
+@jwt_required()
+def add_favorite():
+    user_id = get_jwt_identity()
+    data = request.get_json()
+    listing_id = data.get("listing_id")
+
+    if not listing_id:
+        return jsonify({"error": "Listing ID is required"}), 400
+    
+    existing = Favorite.query.filter_by(user_id=user_id, listing_id=listing_id).first()
+    if existing:
+        return jsonify({"error": "Already favorited"}), 400
+    
+    new_fav = Favorite(user_id=user_id, listing_id=listing_id)
+    try:
+        db.session.add(new_fav)
+        db.session.commit()
+        return jsonify({"message": "Favorite added", "id": new_fav.id}), 201
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": "Could not add favorite", "details": str(e)}), 500
 
 
 

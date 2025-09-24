@@ -70,6 +70,7 @@ export default function FavoritesPage() {
               (async () => {
                 try {
                   const res = await fetchFavorites();
+                  console.log("fetchFavorites response (axios):", res)
                   setFavorites(res.data ?? []);
                 } catch (e) {
                   setError("Failed to load favorites. Please try again.");
