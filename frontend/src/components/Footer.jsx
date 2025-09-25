@@ -28,8 +28,6 @@ export default function Footer() {
     { href: "/listing-form", label: "Post Ad", icon: <PlusSquare size={16} /> },
     { href: "/my-listings", label: "My Listings", icon: <List size={16} /> },
     { href: "/favorites", label: "Favorites", icon: <Heart size={16} /> },
-    { href: "/login", label: "Login", icon: <LogIn size={16} /> },
-    { href: "/signup", label: "Signup", icon: <UserPlus size={16} /> },
   ];
 
   const socialLinks = [
