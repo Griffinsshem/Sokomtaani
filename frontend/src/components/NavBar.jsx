@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "../context/AuthContext";
+import Image from "next/image";
 
 export default function NavBar() {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -27,13 +28,15 @@ export default function NavBar() {
           <div className="flex justify-between h-16 items-center">
             {/* Logo */}
             <Link href="/homepage" className="flex items-center gap-3">
-              <div className="rounded-lg bg-green-600 px-3 py-2 font-extrabold text-white shadow-md hover:scale-105 transition-transform">
-                SM
-              </div>
-              <span className="font-semibold tracking-wide text-green-800 text-xl drop-shadow-sm">
-                SokoMtaani
-              </span>
+              <Image
+                src="/logo.svg"
+                alt="SokoMtaani Logo"
+                width={140}
+                height={140}
+                className="object-contain"
+              />
             </Link>
+
 
             {/* Desktop Nav */}
             <nav className="hidden sm:flex items-center gap-8 text-base font-medium text-green-900">
