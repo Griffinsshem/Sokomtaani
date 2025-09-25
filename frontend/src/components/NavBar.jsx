@@ -33,7 +33,7 @@ export default function NavBar() {
                 alt="SokoMtaani Logo"
                 width={140}
                 height={140}
-                className="object-contain"
+                className="object-contain cursor-pointer hover:scale-105 transition-transform"
               />
             </Link>
 

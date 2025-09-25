@@ -3,12 +3,15 @@ from app import db
 from app.models.categories import Category
 from flask_jwt_extended import jwt_required
 
-categories_bp = Blueprint("categories", __name__)
+
+categories_bp = Blueprint("categories", __name__, url_prefix="/api/categories")
+
 
 @categories_bp.route("/", methods=["GET"])
 def get_categories():
     categories = Category.query.all()
     return jsonify([cat.to_dict() for cat in categories]), 200
+
 
 
 @categories_bp.route("/", methods=["POST"])
@@ -20,6 +23,7 @@ def add_category():
     if not name:
         return jsonify({"error": "Category name is required"}), 400
 
+    # Prevent duplicates
     if Category.query.filter_by(name=name).first():
         return jsonify({"error": "Category already exists"}), 400
 
@@ -28,4 +32,3 @@ def add_category():
     db.session.commit()
 
     return jsonify(new_category.to_dict()), 201
-

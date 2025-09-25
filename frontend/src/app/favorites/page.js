@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { fetchFavorites, removeFavorite } from "../../lib/api";
-import CategoryFilter from "../../components/CategoryFilter";
 import ListingCard from "../../components/ListingCard";
 import Link from "next/link";
 
@@ -11,7 +10,6 @@ export default function FavoritesPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [removingId, setRemovingId] = useState(null);
-  const [selectedCategory, setSelectedCategory] = useState(null);
 
   useEffect(() => {
     let mounted = true;
@@ -56,24 +54,6 @@ export default function FavoritesPage() {
     }
   };
 
-  // 🔹 Extract unique categories from favorites
-  const categories = Array.from(
-    new Map(
-      favorites
-        .filter((f) => f.listing && f.listing.category_id)
-        .map((f) => [
-          f.listing.category_id,
-          { id: f.listing.category_id, name: f.listing.category_name },
-        ])
-    ).values()
-  );
-
-  // 🔹 Filter favorites by selected category
-  const filteredFavorites =
-    selectedCategory === null
-      ? favorites
-      : favorites.filter((f) => f.listing?.category_id === selectedCategory);
-
   if (loading) {
     return <div className="p-6 text-center">Loading favorites...</div>;
   }
@@ -90,7 +70,6 @@ export default function FavoritesPage() {
               (async () => {
                 try {
                   const res = await fetchFavorites();
-                  console.log("fetchFavorites response (axios):", res);
                   setFavorites(res.data ?? []);
                 } catch (e) {
                   setError("Failed to load favorites. Please try again.");
@@ -112,28 +91,16 @@ export default function FavoritesPage() {
     <div className="max-w-5xl mx-auto p-6">
       <h1 className="text-2xl font-bold mb-6">My Favorites</h1>
 
-      {/* 🔹 Category Filter */}
-      {categories.length > 0 && (
-        <CategoryFilter
-          categories={categories}
-          selectedCategory={selectedCategory}
-          onCategoryChange={setSelectedCategory}
-        />
-      )}
-
-      {filteredFavorites.length === 0 ? (
+      {favorites.length === 0 ? (
         <div className="text-center">
-          <p className="text-gray-500">No favorites found for this category.</p>
-          <Link
-            href="/homepage"
-            className="text-green-600 underline mt-3 inline-block"
-          >
+          <p className="text-gray-500">You don’t have any favorites yet.</p>
+          <Link href="/homepage" className="text-green-600 underline mt-3 inline-block">
             Browse listings
           </Link>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-          {filteredFavorites.map((fav) => (
+          {favorites.map((fav) => (
             <ListingCard
               key={fav.id}
               listing={fav.listing}
