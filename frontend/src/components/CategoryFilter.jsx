@@ -1,5 +1,3 @@
-src / components / categoryFilter.jsx
-
 "use client";
 
 import { useEffect, useState } from "react";
