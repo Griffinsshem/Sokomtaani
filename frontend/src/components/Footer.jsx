@@ -1,7 +1,7 @@
 
 "use client";
 
-import React from "react";
+import React, { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import {
   Mail,
@@ -18,8 +18,8 @@ import {
   LogIn,
   UserPlus,
   MapPin,
-  MessageCircle,
-  Clock,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 
 export default function Footer() {
@@ -37,6 +37,86 @@ export default function Footer() {
     { href: "https://twitter.com", icon: <Twitter size={18} /> },
     { href: "https://instagram.com", icon: <Instagram size={18} /> },
   ];
+
+  // --- Testimonials ---
+  const testimonials = [
+    {
+      quote:
+        "SokoMtaani has completely transformed how I sell my farm produce — now I reach more customers and earn fair prices. Truly a game changer for local farmers!",
+      author: "— Mary W., Farmer in Nakuru",
+    },
+    {
+      quote:
+        "As a buyer, I love how easy it is to find fresh and affordable produce. The platform is smooth, secure, and saves me so much time!",
+      author: "— James K., Customer in Nairobi",
+    },
+    {
+      quote:
+        "This platform helped me connect with farmers directly. I get fresh vegetables every week at fair prices!",
+      author: "— Sarah N., Customer in Eldoret",
+    },
+    {
+      quote:
+        "Selling my produce is now so easy. No middlemen, just direct customers. My income has improved a lot.",
+      author: "— Peter M., Farmer in Kisumu",
+    },
+    {
+      quote:
+        "The transparency and fairness of the platform give me peace of mind. I know I’m supporting farmers directly.",
+      author: "— David O., Customer in Mombasa",
+    },
+    {
+      quote:
+        "I was struggling to find reliable markets, but SokoMtaani opened doors for me. My produce never goes to waste now!",
+      author: "— Grace A., Farmer in Nyeri",
+    },
+  ];
+
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  // swipe handling
+  const touchStartX = useRef(0);
+  const touchEndX = useRef(0);
+
+  const handleTouchStart = (e) => {
+    touchStartX.current = e.touches[0].clientX;
+  };
+
+  const handleTouchMove = (e) => {
+    touchEndX.current = e.touches[0].clientX;
+  };
+
+  const handleTouchEnd = () => {
+    if (touchStartX.current - touchEndX.current > 50) {
+      handleNext();
+    }
+    if (touchEndX.current - touchStartX.current > 50) {
+      handlePrev();
+    }
+  };
+
+  // auto rotate
+  useEffect(() => {
+    const interval = setInterval(() => {
+      handleNext();
+    }, 10000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const handleNext = () => {
+    setCurrentIndex((prev) => (prev + 2) % testimonials.length);
+  };
+
+  const handlePrev = () => {
+    setCurrentIndex(
+      (prev) => (prev - 2 + testimonials.length) % testimonials.length
+    );
+  };
+
+  const visibleTestimonials = testimonials.slice(
+    currentIndex,
+    currentIndex + 2
+  );
 
   return (
     <footer className="bg-green-900 text-white mt-12 font-sans">
@@ -121,34 +201,59 @@ export default function Footer() {
         <h3 className="text-center text-yellow-300 text-xl font-semibold mb-6">
           What Our Users Say
         </h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-5xl mx-auto text-sm">
-          {/* Testimonial 1 */}
-          <div className="bg-green-900/60 p-6 rounded-xl shadow-lg text-center hover:shadow-2xl transition-transform hover:scale-105">
-            <blockquote className="italic text-base text-yellow-200 leading-relaxed">
-              “SokoMtaani has completely transformed how I sell my farm produce —
-              now I reach more customers and earn fair prices. Truly a game
-              changer for local farmers!”
-            </blockquote>
-            <p className="mt-3 text-gray-300 font-medium">
-              — Mary W., Farmer in Nakuru
-            </p>
+        <div
+          className="relative max-w-5xl mx-auto"
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+        >
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm transition-all duration-700 ease-in-out">
+            {visibleTestimonials.map((t, idx) => (
+              <div
+                key={idx}
+                className="bg-green-900/60 p-6 rounded-xl shadow-lg text-center hover:shadow-2xl transition-transform hover:scale-105"
+              >
+                <blockquote className="italic text-base text-yellow-200 leading-relaxed">
+                  “{t.quote}”
+                </blockquote>
+                <p className="mt-3 text-gray-300 font-medium">{t.author}</p>
+              </div>
+            ))}
           </div>
 
-          {/* Testimonial 2 */}
-          <div className="bg-green-900/60 p-6 rounded-xl shadow-lg text-center hover:shadow-2xl transition-transform hover:scale-105">
-            <blockquote className="italic text-base text-yellow-200 leading-relaxed">
-              “As a buyer, I love how easy it is to find fresh and affordable
-              produce. The platform is smooth, secure, and saves me so much
-              time!”
-            </blockquote>
-            <p className="mt-3 text-gray-300 font-medium">
-              — James K., Customer in Nairobi
-            </p>
+          {/* Navigation arrows */}
+          <button
+            onClick={handlePrev}
+            className="absolute left-0 top-1/2 -translate-y-1/2 bg-green-700 hover:bg-green-600 p-2 rounded-full shadow-md"
+          >
+            <ChevronLeft className="h-5 w-5 text-white" />
+          </button>
+          <button
+            onClick={handleNext}
+            className="absolute right-0 top-1/2 -translate-y-1/2 bg-green-700 hover:bg-green-600 p-2 rounded-full shadow-md"
+          >
+            <ChevronRight className="h-5 w-5 text-white" />
+          </button>
+
+          {/* Dots */}
+          <div className="flex justify-center mt-6 space-x-2">
+            {Array.from({ length: Math.ceil(testimonials.length / 2) }).map(
+              (_, i) => (
+                <button
+                  key={i}
+                  onClick={() => setCurrentIndex(i * 2)}
+                  className={`w-3 h-3 rounded-full ${currentIndex / 2 === i
+                    ? "bg-yellow-300"
+                    : "bg-gray-400 hover:bg-gray-500"
+                    }`}
+                />
+              )
+            )}
           </div>
         </div>
       </div>
 
-      {/* Bottom Bar */}
+      {/* Bottom Bar (UNCHANGED) */}
       <div className="border-t border-green-700 text-center py-6 text-gray-300 text-sm space-y-3">
         {/* Social Links */}
         <div className="flex justify-center space-x-4">
@@ -191,4 +296,3 @@ export default function Footer() {
     </footer>
   );
 }
-
