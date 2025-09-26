@@ -20,3 +20,9 @@ class ProductionConfig(Config):
 class TestingConfig(Config):
     TESTING = True
     SQLALCHEMY_DATABASE_URI = "sqlite:///:memory:"
+
+class ProductionConfig:
+    DEBUG = False
+    TESTING = False
+    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL', '').replace('postgres://', 'postgresql://')
+    JWT_SECRET_KEY = os.environ.get('JWT_SECRET_KEY', 'your-production-secret-key-change-this')
