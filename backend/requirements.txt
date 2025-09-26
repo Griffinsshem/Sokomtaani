@@ -4,6 +4,7 @@ Flask-Migrate==4.1.0
 Flask-Bcrypt==1.0.1
 Flask-JWT-Extended==4.7.1
 Flask-Cors==4.0.0
+flask-marshmallow==1.2.1
 
 SQLAlchemy==2.0.43
 alembic==1.16.5
@@ -13,3 +14,4 @@ Werkzeug==3.1.3
 itsdangerous==2.2.0
 click==8.1.7
 gunicorn==21.2.0
+flask-marshmallow==1.2.1
