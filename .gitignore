@@ -1,6 +1,3 @@
-# Python cache
-*.pyc
 __pycache__/
+*.pyc
 
-# Local database
-instance/soko.db
