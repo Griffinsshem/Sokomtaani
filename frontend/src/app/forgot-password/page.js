@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
-import { useAuth } from "../../context/AuthContext"; 
+import { useAuth } from "../../context/AuthContext";
 
 // Validation schema
 const ForgotPasswordSchema = Yup.object().shape({
@@ -12,13 +12,13 @@ const ForgotPasswordSchema = Yup.object().shape({
 });
 
 export default function ForgotPasswordPage() {
-  const { forgotPassword } = useAuth(); 
+  const { forgotPassword } = useAuth();
   const [submitted, setSubmitted] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
   const handleForgotPassword = async (values, { setSubmitting }) => {
     try {
-      await forgotPassword(values.email); 
+      await forgotPassword(values.email);
       setSubmitted(true);
       setErrorMessage("");
     } catch (error) {

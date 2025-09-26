@@ -1,8 +1,8 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect } from "react";
-import axios from "axios";
 import { useRouter } from "next/navigation";
+import api from "../utils/api";
 
 // Create Context
 const AuthContext = createContext();
@@ -22,14 +22,12 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const API_BASE_URL =
-    process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
-
   // Load user from localStorage on first render
   useEffect(() => {
     try {
       const storedUser = localStorage.getItem("user");
-      if (storedUser) {
+      const token = localStorage.getItem("token");
+      if (storedUser && token) {
         setUser(JSON.parse(storedUser));
       }
     } catch (err) {
@@ -41,19 +39,29 @@ export function AuthProvider({ children }) {
   // Login
   const login = async (email, password) => {
     try {
-      const response = await axios.post(`${API_BASE_URL}/auth/login`, {
+      console.log("Attempting login...");
+      
+      const response = await api.post("auth/login", {
         email,
         password,
       });
+      
+      console.log("Login response received:", response.data);
+      
       const { user, token } = response.data;
 
+      // Set user state
       setUser(user);
+      
+      // Store in localStorage
       localStorage.setItem("user", JSON.stringify(user));
       localStorage.setItem("token", token);
 
-      router.push("/homepage");
+      console.log("Login successful, redirecting to homepage");
+      router.push("/"); // Redirect to main homepage instead of /homepage
     } catch (error) {
-      console.error("Login error:", error.response?.data || error.message);
+      console.error("Full login error:", error);
+      console.error("Error response:", error.response?.data);
       throw error;
     }
   };
@@ -61,17 +69,13 @@ export function AuthProvider({ children }) {
   // Signup
   const signup = async (formData) => {
     try {
-      const response = await axios.post(
-        `${API_BASE_URL}/auth/signup`,
-        formData
-      );
+      const response = await api.post("auth/signup", formData);
       const { user, token } = response.data;
 
       setUser(user);
       localStorage.setItem("user", JSON.stringify(user));
       localStorage.setItem("token", token);
-
-      router.push("/homepage");
+      router.push("/"); // Redirect to main homepage
     } catch (error) {
       console.error("Signup error:", error.response?.data || error.message);
       throw error;
@@ -89,7 +93,7 @@ export function AuthProvider({ children }) {
   // Forgot Password
   const forgotPassword = async (email) => {
     try {
-      await axios.post(`${API_BASE_URL}/auth/forgot-password`, { email });
+      await api.post("auth/forgot-password", { email });
     } catch (error) {
       console.error(
         "Forgot password error:",
@@ -99,7 +103,6 @@ export function AuthProvider({ children }) {
     }
   };
 
-  // Context Value
   const value = {
     user,
     loading,

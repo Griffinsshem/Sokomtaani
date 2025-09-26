@@ -1,8 +1,8 @@
-
 "use client";
 
 import React, { useEffect, useState, useRef } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import {
   Mail,
   Phone,
@@ -10,13 +10,10 @@ import {
   Facebook,
   Twitter,
   Instagram,
-  Leaf,
   Home,
   PlusSquare,
   Heart,
   List,
-  LogIn,
-  UserPlus,
   MapPin,
   ChevronLeft,
   ChevronRight,
@@ -24,7 +21,7 @@ import {
 
 export default function Footer() {
   const quickLinks = [
-    { href: "/homepage", label: "Home", icon: <Home size={16} /> },
+    { href: "/", label: "Home", icon: <Home size={16} /> },
     { href: "/listing-form", label: "Post Ad", icon: <PlusSquare size={16} /> },
     { href: "/my-listings", label: "My Listings", icon: <List size={16} /> },
     { href: "/favorites", label: "Favorites", icon: <Heart size={16} /> },
@@ -60,7 +57,7 @@ export default function Footer() {
     },
     {
       quote:
-        "The transparency and fairness of the platform give me peace of mind. I know I’m supporting farmers directly.",
+        "The transparency and fairness of the platform give me peace of mind. I know I'm supporting farmers directly.",
       author: "— David O., Customer in Mombasa",
     },
     {
@@ -122,8 +119,13 @@ export default function Footer() {
         {/* Brand */}
         <div className="bg-green-800 p-6 rounded-xl shadow-lg transition-transform hover:scale-105 hover:shadow-2xl">
           <div className="flex items-center gap-2 mb-3">
-            <Leaf className="text-yellow-300" size={28} />
-            <h2 className="text-2xl font-bold text-yellow-300">SokoMtaani</h2>
+            <Image
+              src="/logo.svg"
+              alt="SokoMtaani Logo"
+              width={120}
+              height={40}
+              className="object-contain"
+            />
           </div>
           <p className="text-gray-200 leading-relaxed mb-3">
             Your trusted local farm marketplace connecting farmers directly with
@@ -131,7 +133,7 @@ export default function Footer() {
             products.
           </p>
           <p className="italic text-yellow-200 mb-4">
-            “From the farm, straight to your home.”
+            "From the farm, straight to your home."
           </p>
           <Link
             href="/listing-form"
@@ -212,7 +214,7 @@ export default function Footer() {
                 className="bg-green-900/60 p-6 rounded-xl shadow-lg text-center hover:shadow-2xl transition-transform hover:scale-105"
               >
                 <blockquote className="italic text-base text-yellow-200 leading-relaxed">
-                  “{t.quote}”
+                  "{t.quote}"
                 </blockquote>
                 <p className="mt-3 text-gray-300 font-medium">{t.author}</p>
               </div>
@@ -251,7 +253,7 @@ export default function Footer() {
         </div>
       </div>
 
-      {/* Bottom Bar (UNCHANGED) */}
+      {/* Bottom Bar */}
       <div className="border-t border-green-700 text-center py-6 text-gray-300 text-sm space-y-3">
         {/* Social Links */}
         <div className="flex justify-center space-x-4">

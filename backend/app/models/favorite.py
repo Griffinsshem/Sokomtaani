@@ -22,4 +22,3 @@ class Favorite(db.Model):
             "listing_id": self.listing_id,
             "date_added": self.date_added.isoformat() if self.date_added else None,
         }
-

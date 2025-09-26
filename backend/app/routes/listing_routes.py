@@ -7,8 +7,27 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 
 listings_bp = Blueprint("listings", __name__)
 
+# Handle OPTIONS requests for CORS
+@listings_bp.route("/", methods=["OPTIONS"])
+def handle_options():
+    return "", 200
+
+
+@listings_bp.route('/<int:id>', methods=["DELETE"])
+def delete_current_listing(id):
+    listing = Listing.query.get(id)
+    
+    if not listing:
+        return jsonify({"error": "Listing not found"}), 404
+    
+    db.session.delete(listing)
+    db.session.commit()
+    
+    return jsonify({"message": f"Listing {id} deleted successfully"}), 200
+
+
 # get all listings (homepage)
-@listings_bp.route("", methods=["GET"])
+@listings_bp.route("/", methods=["GET"])
 def get_all_listings():
     listings = Listing.query.order_by(Listing.created_at.desc()).all()
     return jsonify(listings_schema.dump(listings)), 200
@@ -22,13 +41,13 @@ def get_my_listings():
     return jsonify(listings_schema.dump(listings)), 200
 
 # create a new listing
-@listings_bp.route("", methods=["POST"])
+@listings_bp.route("/", methods=["POST"])
 @jwt_required()
 def create_listing():
     data = request.get_json()
     user_id = get_jwt_identity()
     user = User.query.get(user_id)
-    
+
     if not user:
         return jsonify({"error": "User not found"}), 404
 

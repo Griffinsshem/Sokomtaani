@@ -27,22 +27,22 @@ export default function NavBar() {
         <div className="max-w-7xl mx-auto px-6 sm:px-8">
           <div className="flex justify-between h-16 items-center">
             {/* Logo */}
-            <Link href="/homepage" className="flex items-center gap-3">
+            <Link href="/" className="flex items-center gap-3">
               <Image
                 src="/logo.svg"
                 alt="SokoMtaani Logo"
                 width={140}
-                height={140}
+                height={40}
                 className="object-contain cursor-pointer hover:scale-105 transition-transform"
+                priority
               />
             </Link>
-
 
             {/* Desktop Nav */}
             <nav className="hidden sm:flex items-center gap-8 text-base font-medium text-green-900">
               <Link
-                href="/homepage"
-                className={`transition-colors duration-200 ${isActive("/homepage")
+                href="/"
+                className={`transition-colors duration-200 ${isActive("/")
                   ? "text-green-700 font-semibold border-b-2 border-green-600 pb-1"
                   : "hover:text-green-600"
                   }`}
@@ -76,13 +76,20 @@ export default function NavBar() {
               >
                 Favorites
               </Link>
-              {user && (
+              {user ? (
                 <button
                   onClick={handleLogout}
                   className="ml-4 px-4 py-2 bg-red-600 text-white rounded-md shadow-md hover:bg-red-700 hover:scale-105 transition-all"
                 >
                   Logout
                 </button>
+              ) : (
+                <Link
+                  href="/login"
+                  className="ml-4 px-4 py-2 bg-green-600 text-white rounded-md shadow-md hover:bg-green-700 hover:scale-105 transition-all"
+                >
+                  Login
+                </Link>
               )}
             </nav>
 
@@ -101,36 +108,51 @@ export default function NavBar() {
           {mobileOpen && (
             <div className="sm:hidden mt-3 pb-4 space-y-2 text-green-900 font-medium bg-white/80 backdrop-blur-md rounded-xl shadow-lg border border-green-100">
               <Link
-                href="/homepage"
+                href="/"
                 className="block px-4 py-2 rounded hover:bg-green-50 transition-colors"
+                onClick={() => setMobileOpen(false)}
               >
                 Home
               </Link>
               <Link
                 href="/listing-form"
                 className="block px-4 py-2 rounded hover:bg-green-50 transition-colors"
+                onClick={() => setMobileOpen(false)}
               >
                 Post Ad
               </Link>
               <Link
                 href="/my-listings"
                 className="block px-4 py-2 rounded hover:bg-green-50 transition-colors"
+                onClick={() => setMobileOpen(false)}
               >
                 My Listings
               </Link>
               <Link
                 href="/favorites"
                 className="block px-4 py-2 rounded hover:bg-green-50 transition-colors"
+                onClick={() => setMobileOpen(false)}
               >
                 Favorites
               </Link>
-              {user && (
+              {user ? (
                 <button
-                  onClick={handleLogout}
+                  onClick={() => {
+                    handleLogout();
+                    setMobileOpen(false);
+                  }}
                   className="w-full text-left px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
                 >
                   Logout
                 </button>
+              ) : (
+                <Link
+                  href="/login"
+                  className="block px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
+                  onClick={() => setMobileOpen(false)}
+                >
+                  Login
+                </Link>
               )}
             </div>
           )}
