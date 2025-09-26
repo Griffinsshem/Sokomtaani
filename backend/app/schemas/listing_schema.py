@@ -6,12 +6,12 @@ class ListingSchema(ma.SQLAlchemyAutoSchema):
     class Meta:
         model = Listing
         load_instance = True
-        exclude = ("user", "favorites", "category")  
+        include_fk = True 
 
-    # Explicitly handle fields that cause 422 errors
-    price = fields.Float()  # convert Decimal → float
-    created_at = fields.DateTime(format="iso")  # format datetime
-    updated_at = fields.DateTime(format="iso")  # if exists
+    
+    price = fields.Float()  
+    created_at = fields.DateTime(format="iso")  
+    updated_at = fields.DateTime(format="iso") 
 
 # Schema instances
 listing_schema = ListingSchema()

@@ -7,7 +7,6 @@ import * as Yup from "yup";
 import { useAuth } from "../../context/AuthContext";
 import { Eye, EyeOff } from "lucide-react";
 
-
 // Validation schema using Yup
 const LoginSchema = Yup.object().shape({
   email: Yup.string().email("Invalid email").required("Email is required"),
@@ -17,15 +16,25 @@ const LoginSchema = Yup.object().shape({
 export default function LoginPage() {
   const { login } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
+  const [generalError, setGeneralError] = useState("");
 
   const handleLogin = async (values, { setSubmitting, setErrors }) => {
+    setGeneralError(""); // Clear previous errors
     try {
       await login(values.email, values.password);
     } catch (err) {
-      console.error(err);
-      setErrors({
-        email: err.response?.data?.message || "Invalid email or password",
-      });
+      console.error("Login page error:", err);
+      
+      // Handle different types of errors
+      if (err.response?.data?.message) {
+        setGeneralError(err.response.data.message);
+      } else if (err.message.includes("Network Error")) {
+        setGeneralError("Cannot connect to server. Please check if the backend is running.");
+      } else if (err.response?.status === 401) {
+        setGeneralError("Invalid email or password");
+      } else {
+        setGeneralError("Login failed. Please try again.");
+      }
     } finally {
       setSubmitting(false);
     }
@@ -53,6 +62,13 @@ export default function LoginPage() {
         className="relative z-10 bg-white/70 backdrop-blur-2xl shadow-2xl border border-white/30 rounded-3xl p-12 text-center max-w-md w-full"
       >
         <h2 className="text-3xl font-bold text-green-700 mb-6">Welcome Back</h2>
+
+        {/* General error message */}
+        {generalError && (
+          <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-lg">
+            {generalError}
+          </div>
+        )}
 
         <Formik
           initialValues={{ email: "", password: "" }}
@@ -83,8 +99,6 @@ export default function LoginPage() {
                   name="password"
                   placeholder="Password"
                   className="w-full px-4 py-3 border rounded-lg text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 bg-white/90"
-                  onChange={handleChange}
-                  value={values.password}
                 />
                 <div
                   className="absolute right-3 top-3 cursor-pointer text-gray-500"
@@ -105,7 +119,7 @@ export default function LoginPage() {
                 whileTap={{ scale: 0.97 }}
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full py-3 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 shadow-md transition mt-2"
+                className="w-full py-3 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 shadow-md transition mt-2 disabled:opacity-50"
               >
                 {isSubmitting ? "Logging in..." : "Login"}
               </motion.button>

@@ -34,5 +34,4 @@ export async function removeFavorite(id) {
   return api.delete(`/favorites/${id}`);
 }
 
-// Keep default export for flexibility
 export default api;

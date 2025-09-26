@@ -1,8 +1,8 @@
-"""Initial migration
+"""empty message
 
-Revision ID: 1e29c11e8d05
+Revision ID: 0e8fb775edac
 Revises: 
-Create Date: 2025-09-23 11:13:51.741200
+Create Date: 2025-09-26 06:23:08.519085
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '1e29c11e8d05'
+revision = '0e8fb775edac'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -43,6 +43,9 @@ def upgrade():
     sa.Column('price', sa.Float(), nullable=False),
     sa.Column('image_url', sa.String(length=250), nullable=True),
     sa.Column('created_at', sa.DateTime(), nullable=True),
+    sa.Column('contact_email', sa.String(length=120), nullable=False),
+    sa.Column('contact_phone', sa.String(length=15), nullable=False),
+    sa.Column('location', sa.String(length=100), nullable=False),
     sa.Column('user_id', sa.Integer(), nullable=False),
     sa.Column('category_id', sa.Integer(), nullable=False),
     sa.ForeignKeyConstraint(['category_id'], ['categories.id'], ),
@@ -51,9 +54,9 @@ def upgrade():
     )
     op.create_table('favorites',
     sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('created_at', sa.DateTime(), nullable=True),
     sa.Column('user_id', sa.Integer(), nullable=False),
     sa.Column('listing_id', sa.Integer(), nullable=False),
+    sa.Column('date_added', sa.DateTime(), nullable=True),
     sa.ForeignKeyConstraint(['listing_id'], ['listings.id'], ),
     sa.ForeignKeyConstraint(['user_id'], ['users.id'], ),
     sa.PrimaryKeyConstraint('id')

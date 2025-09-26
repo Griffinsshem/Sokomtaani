@@ -5,17 +5,19 @@ from flask_jwt_extended import create_access_token
 from datetime import timedelta
 from app.schemas.user_schemas import user_schema
 
-
-
 auth_bp = Blueprint("auth", __name__, url_prefix="/api/auth")
 
-# Signup
+# Handle OPTIONS requests for CORS
+@auth_bp.route("/signup", methods=["OPTIONS"])
+@auth_bp.route("/login", methods=["OPTIONS"])
+def handle_options():
+    return "", 200
 
+# Signup
 @auth_bp.route("/signup", methods=["POST"])
 def signup():
     data = request.get_json()
 
-    
     name = data.get("name")
     email = data.get("email")
     phone = data.get("phone")
@@ -44,36 +46,30 @@ def signup():
 
     return jsonify({
         "message": "User registered successfully",
-        "user": user_schema.dump(new_user) 
+        "user": user_schema.dump(new_user)
     }), 201
 
-
 # Login
-
 @auth_bp.route("/login", methods=["POST"])
 def login():
     data = request.get_json()
     email = data.get("email")
     password = data.get("password")
 
-  
     if not all([email, password]):
         return jsonify({"message": "Email and password are required"}), 400
-
 
     user = User.query.filter_by(email=email).first()
     if not user or not user.check_password(password):
         return jsonify({"message": "Invalid email or password"}), 401
 
-   
     access_token = create_access_token(
         identity=user.id,
         expires_delta=timedelta(hours=24)
     )
 
     return jsonify({
-    "message": "Login successful",
-    "token": access_token,
-    "user": user_schema.dump(user)
-}), 200
-
+        "message": "Login successful",
+        "token": access_token,
+        "user": user_schema.dump(user)
+    }), 200

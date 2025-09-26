@@ -80,7 +80,7 @@ export default function ListingForm() {
                 display: "flex",
                 justifyContent: "center",
                 alignItems: "center",
-                background: "linear-gradient(135deg, #eef2ff 0%, #e0f2fe 100%)",
+                background: "linear-gradient(135deg, #7a7b80ff 0%, #bac0c4ff 100%)",
                 padding: 20,
             }}
         >
@@ -91,7 +91,7 @@ export default function ListingForm() {
                     background: "#ffffff",
                     borderRadius: 12,
                     boxShadow: "0 10px 30px rgba(0,0,0,0.08)",
-                    border: "1px solid #e5e7eb",
+                    border: "1px solid #131314ff",
                     padding: 20,
                 }}
             >
@@ -204,5 +204,4 @@ export default function ListingForm() {
         </div>
     );
 }
-
 
