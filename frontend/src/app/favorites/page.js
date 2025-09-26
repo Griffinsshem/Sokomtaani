@@ -7,6 +7,7 @@ import api from "../../utils/api";
 import NavBar from "../../components/NavBar";
 import Footer from "../../components/Footer";
 import { Heart, Trash2, Eye, ShoppingCart, MapPin, Phone, Calendar, Star } from "lucide-react";
+import Image from "next/image";
 
 export default function Favorites() {
   const router = useRouter();
@@ -22,26 +23,25 @@ export default function Favorites() {
     }
   }, [isAuthenticated, router]);
 
-  // Fetch user's favorites from localStorage (simulated)
+
   useEffect(() => {
     if (!isAuthenticated) return;
 
     const fetchFavorites = async () => {
       try {
-        // Get favorite IDs from localStorage
+
         const favoriteIds = JSON.parse(localStorage.getItem('favorites') || '[]');
-        
+
         if (favoriteIds.length === 0) {
           setFavorites([]);
           setLoading(false);
           return;
         }
 
-        // Fetch all listings
         const res = await api.get("listings/");
-        
-        // Filter to only include favorited listings
-        const userFavorites = res.data.filter(listing => 
+
+
+        const userFavorites = res.data.filter(listing =>
           favoriteIds.includes(listing.id)
         );
 
@@ -60,11 +60,10 @@ export default function Favorites() {
     if (!confirm("Remove from favorites?")) return;
 
     try {
-      // Remove from localStorage
       const favoriteIds = JSON.parse(localStorage.getItem('favorites') || '[]');
       const updatedFavorites = favoriteIds.filter(id => id !== listingId);
       localStorage.setItem('favorites', JSON.stringify(updatedFavorites));
-      
+
       // Update state
       setFavorites(favorites.filter(fav => fav.id !== listingId));
       alert("Removed from favorites!");
@@ -76,7 +75,7 @@ export default function Favorites() {
 
   const clearAllFavorites = () => {
     if (!confirm("Clear all favorites?")) return;
-    
+
     localStorage.setItem('favorites', '[]');
     setFavorites([]);
     alert("All favorites cleared!");
@@ -130,7 +129,7 @@ export default function Favorites() {
   return (
     <div className="min-h-screen bg-gray-50">
       <NavBar />
-      
+
       <div className="max-w-7xl mx-auto px-6 py-8">
         {/* Header */}
         <div className="text-center mb-8">
@@ -201,7 +200,7 @@ export default function Favorites() {
               {favorites.map((listing) => {
                 const location = getRandomLocation();
                 const contact = getRandomContact();
-                
+
                 return (
                   <div key={listing.id} className="bg-white rounded-lg shadow-lg border border-green-100 overflow-hidden hover:shadow-xl transition-shadow group relative">
                     {/* Favorite Badge */}
@@ -217,8 +216,8 @@ export default function Favorites() {
                     {/* Listing Image */}
                     <div className="h-48 bg-gradient-to-br from-green-100 to-green-200 flex items-center justify-center relative overflow-hidden">
                       {listing.image_url ? (
-                        <img 
-                          src={listing.image_url} 
+                        <Image
+                          src={listing.image_url}
                           alt={listing.title}
                           className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300"
                         />

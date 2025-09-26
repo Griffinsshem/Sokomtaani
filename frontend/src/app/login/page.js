@@ -24,7 +24,7 @@ export default function LoginPage() {
       await login(values.email, values.password);
     } catch (err) {
       console.error("Login page error:", err);
-      
+
       // Handle different types of errors
       if (err.response?.data?.message) {
         setGeneralError(err.response.data.message);
@@ -136,7 +136,7 @@ export default function LoginPage() {
 
         {/* Sign Up Link */}
         <p className="mt-2 text-sm text-gray-600 text-center">
-          Don't have an account?{" "}
+          Don&apos;t have an account?{" "}
           <a href="/signup" className="text-green-600 font-medium hover:underline">
             Sign Up
           </a>
