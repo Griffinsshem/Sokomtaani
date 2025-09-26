@@ -63,7 +63,6 @@ export default function MyListings() {
       await api.delete(`listings/${listingId}`, { id: listingId });
 
       setListings(listings.filter(listing => listing.id !== listingId));
-      // alert("Listing deleted successfully!");
     } catch (error) {
       console.error("Error deleting listing:", error);
       alert("Error deleting listing. Please try again.");

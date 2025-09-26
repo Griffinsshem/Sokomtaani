@@ -7,7 +7,7 @@ import api from "../utils/api";
 import NavBar from "../components/NavBar";
 import Footer from "../components/Footer";
 import { Leaf, Users, Truck, Star, ArrowRight, Heart, MapPin, Phone, Calendar, Mail, CheckCircle, XCircle } from "lucide-react";
-import Image from "next/image";
+// import Image from "next/image";
 
 export default function Home() {
   const { user, isAuthenticated } = useAuth();
