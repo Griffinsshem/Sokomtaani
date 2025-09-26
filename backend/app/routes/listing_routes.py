@@ -35,7 +35,7 @@ def get_all_listings():
 # get listings for the current user
 @listings_bp.route("/my", methods=["GET"])
 @jwt_required()
-def get_my_listings():
+def get_my_listings(): 
     user_id = get_jwt_identity()
     listings = Listing.query.filter_by(user_id=user_id).order_by(Listing.created_at.desc()).all()
     return jsonify(listings_schema.dump(listings)), 200
