@@ -1,8 +1,8 @@
 import axios from 'axios';
 
-// Create axios instance with base URL
+
 const api = axios.create({
-  baseURL: 'http://127.0.0.1:5000/api', // Your backend URL
+  baseURL: 'https://sokomtaani6.onrender.com/api',
   headers: {
     'Content-Type': 'application/json',
   },
