@@ -153,7 +153,7 @@ export default function MyListings() {
                 {/* Listing Image Placeholder */}
                 <div className="h-48 bg-green-100 flex items-center justify-center">
                   {listing.image_url ? (
-                    <img
+                    <Image
                       src={listing.image_url}
                       alt={listing.title}
                       width={400}
