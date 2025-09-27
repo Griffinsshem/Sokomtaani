@@ -7,7 +7,7 @@ import api from "../utils/api";
 import NavBar from "../components/NavBar";
 import Footer from "../components/Footer";
 import { Leaf, Users, Truck, Star, ArrowRight, Heart, MapPin, Phone, Calendar, Mail, CheckCircle, XCircle } from "lucide-react";
-import Image from "next/image";
+import NextImage from "next/image";
 
 export default function Home() {
   const { user, isAuthenticated } = useAuth();
@@ -201,7 +201,7 @@ export default function Home() {
                     {/* Product Image with Sold Overlay */}
                     <div className={`h-48 bg-gradient-to-br from-green-100 to-green-200 flex items-center justify-center relative overflow-hidden ${sold ? 'grayscale' : ''}`}>
                       {listing.image_url ? (
-                        <Image
+                        <NextImage
                           src={listing.image_url}
                           alt={listing.title}
                           width={400}

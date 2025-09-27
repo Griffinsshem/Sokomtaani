@@ -7,7 +7,7 @@ import api from "../../utils/api";
 import NavBar from "../../components/NavBar";
 import Footer from "../../components/Footer";
 import { Heart, Trash2, Eye, ShoppingCart, MapPin, Phone, Calendar, Star } from "lucide-react";
-import Image from "next/image";
+import NextImage from "next/image";
 
 export default function Favorites() {
   const router = useRouter();
@@ -216,7 +216,7 @@ export default function Favorites() {
                     {/* Listing Image */}
                     <div className="h-48 bg-gradient-to-br from-green-100 to-green-200 flex items-center justify-center relative overflow-hidden">
                       {listing.image_url ? (
-                        <Image
+                        <NextImage
                           src={listing.image_url}
                           alt={listing.title}
                           width={400}
