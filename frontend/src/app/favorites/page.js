@@ -216,9 +216,11 @@ export default function Favorites() {
                     {/* Listing Image */}
                     <div className="h-48 bg-gradient-to-br from-green-100 to-green-200 flex items-center justify-center relative overflow-hidden">
                       {listing.image_url ? (
-                        <Image
+                        <NextImage
                           src={listing.image_url}
                           alt={listing.title}
+                          width={400}
+                          height={192}
                           className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300"
                         />
                       ) : (
