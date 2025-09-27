@@ -7,7 +7,7 @@ import api from "../../utils/api";
 import NavBar from "../../components/NavBar";
 import Footer from "../../components/Footer";
 import { Edit, Trash2, Eye, Plus, Calendar } from "lucide-react";
-import Image from 'next/image';
+// import NextImage from 'next/image';
 
 export default function MyListings() {
   const router = useRouter();
@@ -153,7 +153,7 @@ export default function MyListings() {
                 {/* Listing Image Placeholder */}
                 <div className="h-48 bg-green-100 flex items-center justify-center">
                   {listing.image_url ? (
-                    <Image
+                    <img
                       src={listing.image_url}
                       alt={listing.title}
                       width={400}
