@@ -45,8 +45,37 @@ class Config:
 
     JWT_ACCESS_TOKEN_EXPIRES = 86400  # 24h, same as before
 
+    # Browser sessions use an HttpOnly cookie (not readable by JavaScript).
+    # The Authorization header keeps working for API clients.
+    JWT_TOKEN_LOCATION = ["headers", "cookies"]
+    JWT_COOKIE_SECURE = False  # True in production (HTTPS only)
+    JWT_COOKIE_SAMESITE = "Lax"
+    JWT_SESSION_COOKIE = False  # persistent cookie that expires with the token
+    JWT_ACCESS_COOKIE_PATH = "/"
+    # Double-submit CSRF protection for cookie-authenticated writes: the
+    # frontend echoes the readable csrf_access_token cookie in X-CSRF-TOKEN.
+    JWT_COOKIE_CSRF_PROTECT = True
+    JWT_CSRF_IN_COOKIES = True
+    JWT_ACCESS_CSRF_COOKIE_PATH = "/"
+
     CORS_ORIGINS = _cors_origins()
     ADMIN_EMAILS = _admin_emails()
+
+    # Shared secret proving a request came through the Next.js proxy, so the
+    # client IP it forwards can be trusted for rate limiting.
+    PROXY_SHARED_SECRET = os.environ.get("PROXY_SHARED_SECRET", "")
+
+    # Public site URL, used in password-reset emails.
+    FRONTEND_URL = os.environ.get("FRONTEND_URL", "https://sokomtaani.vercel.app").rstrip("/")
+    PASSWORD_RESET_MAX_AGE = 3600  # 1 hour
+
+    # Outgoing email (password reset). If SMTP_HOST is unset, emails are not
+    # sent and a warning is logged instead.
+    SMTP_HOST = os.environ.get("SMTP_HOST", "")
+    SMTP_PORT = int(os.environ.get("SMTP_PORT", "587"))
+    SMTP_USERNAME = os.environ.get("SMTP_USERNAME", "")
+    SMTP_PASSWORD = os.environ.get("SMTP_PASSWORD", "")
+    MAIL_FROM = os.environ.get("MAIL_FROM", os.environ.get("SMTP_USERNAME", ""))
 
     # Rate limiting (Flask-Limiter). In-memory storage is fine for a single
     # instance; set RATELIMIT_STORAGE_URI to a Redis URL when scaling out.
@@ -65,6 +94,7 @@ class DevelopmentConfig(Config):
 class ProductionConfig(Config):
     DEBUG = False
     ENV_NAME = "production"
+    JWT_COOKIE_SECURE = True
     SESSION_COOKIE_SECURE = True
     SESSION_COOKIE_HTTPONLY = True
 

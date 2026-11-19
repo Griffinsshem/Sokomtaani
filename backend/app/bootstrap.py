@@ -37,9 +37,29 @@ def _seed_categories(app):
         app.logger.info("bootstrap.categories_seeded count=%d", len(DEFAULT_CATEGORIES))
 
 
+def _ensure_columns(app):
+    """Add columns introduced after a table was first created.
+
+    db.create_all() never alters existing tables, so new nullable/defaulted
+    columns are added here idempotently.
+    """
+    from sqlalchemy import inspect, text
+
+    insp = inspect(db.engine)
+    cols = {c["name"] for c in insp.get_columns("listings")}
+    if "is_sold" not in cols:
+        false = "false" if db.engine.dialect.name == "postgresql" else "0"
+        with db.engine.begin() as conn:
+            conn.execute(text(
+                f"ALTER TABLE listings ADD COLUMN is_sold BOOLEAN NOT NULL DEFAULT {false}"
+            ))
+        app.logger.warning("bootstrap.column_added table=listings column=is_sold")
+
+
 def bootstrap_database(app):
     with app.app_context():
         from app import models as _models  # noqa: F401  (register all models)
 
         db.create_all()
+        _ensure_columns(app)
         _seed_categories(app)

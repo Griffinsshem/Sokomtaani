@@ -23,9 +23,10 @@ def admin_required(fn):
     @wraps(fn)
     def wrapper(*args, **kwargs):
         verify_jwt_in_request()
+        from app.extensions import db
         from app.models.user import User
 
-        user = User.query.get(current_user_id())
+        user = db.session.get(User, current_user_id())
         admins = current_app.config.get("ADMIN_EMAILS", set())
         if not user or user.email.lower() not in admins:
             current_app.logger.warning(
