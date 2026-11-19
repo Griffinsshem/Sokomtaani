@@ -17,6 +17,8 @@ out/
 .vscode/
 .idea/
 
-# Note: backend/instance/soko.db is intentionally still tracked. Without a
-# DATABASE_URL the backend falls back to this SQLite file, so removing it
-# would wipe the seeded data on the next Render deploy.
+# Local databases (production uses Render Postgres via DATABASE_URL)
+*.db
+*.sqlite
+*.sqlite3
+backend/instance/
