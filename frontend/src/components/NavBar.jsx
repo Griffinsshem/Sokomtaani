@@ -1,166 +1,143 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import { useAuth } from "../context/AuthContext";
 import Image from "next/image";
+import { usePathname } from "next/navigation";
+import { Menu, X } from "lucide-react";
+
+import { useAuth } from "../context/AuthContext";
+
+const PUBLIC_LINKS = [{ href: "/", label: "Home" }];
+const PRIVATE_LINKS = [
+  { href: "/listing-form", label: "Post Ad" },
+  { href: "/my-listings", label: "My Listings" },
+  { href: "/favorites", label: "Favorites" },
+  { href: "/account", label: "Account" },
+];
 
 export default function NavBar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const pathname = usePathname();
-  const router = useRouter();
-  const { user, logout } = useAuth();
+  const { user, ready, logout } = useAuth();
 
-  const isActive = (path) => {
-    if (!pathname) return false;
-    return pathname === path || pathname.startsWith(path + "/");
-  };
+  // Close the mobile menu on navigation.
+  useEffect(() => setMobileOpen(false), [pathname]);
 
-  const handleLogout = () => {
-    logout();
-  };
+  const isActive = (path) =>
+    path === "/" ? pathname === "/" : pathname === path || pathname?.startsWith(`${path}/`);
+
+  const links = user ? [...PUBLIC_LINKS, ...PRIVATE_LINKS] : PUBLIC_LINKS;
+
+  const linkCls = (path) =>
+    `transition-colors duration-200 ${
+      isActive(path) ? "text-green-700 font-semibold border-b-2 border-green-600 pb-1" : "hover:text-green-600"
+    }`;
 
   return (
     <>
-      <header className="fixed top-0 left-0 w-full z-30 bg-white/80 backdrop-blur-md shadow-sm">
-        <div className="max-w-7xl mx-auto px-6 sm:px-8">
-          <div className="flex justify-between h-16 items-center">
-            {/* Logo */}
-            <Link href="/" className="flex items-center gap-3">
-              <Image
-                src="/logo.svg"
-                alt="SokoMtaani Logo"
-                width={140}
-                height={40}
-                className="object-contain cursor-pointer hover:scale-105 transition-transform"
-                priority
-              />
+      <header className="fixed left-0 top-0 z-30 w-full bg-white/90 shadow-sm backdrop-blur-md">
+        <a
+          href="#main"
+          className="sr-only focus:not-sr-only focus:absolute focus:left-2 focus:top-2 focus:z-50 focus:rounded focus:bg-green-700 focus:px-3 focus:py-2 focus:text-white"
+        >
+          Skip to content
+        </a>
+        <div className="mx-auto max-w-7xl px-6 sm:px-8">
+          <div className="flex h-16 items-center justify-between">
+            <Link href="/" className="flex items-center gap-3" aria-label="SokoMtaani home">
+              <Image src="/logo.svg" alt="SokoMtaani" width={140} height={40} className="object-contain" priority />
             </Link>
 
-            {/* Desktop Nav */}
-            <nav className="hidden sm:flex items-center gap-8 text-base font-medium text-green-900">
-              <Link
-                href="/"
-                className={`transition-colors duration-200 ${isActive("/")
-                  ? "text-green-700 font-semibold border-b-2 border-green-600 pb-1"
-                  : "hover:text-green-600"
-                  }`}
-              >
-                Home
-              </Link>
-              <Link
-                href="/listing-form"
-                className={`transition-colors duration-200 ${isActive("/listing-form")
-                  ? "text-green-700 font-semibold border-b-2 border-green-600 pb-1"
-                  : "hover:text-green-600"
-                  }`}
-              >
-                Post Ad
-              </Link>
-              <Link
-                href="/my-listings"
-                className={`transition-colors duration-200 ${isActive("/my-listings")
-                  ? "text-green-700 font-semibold border-b-2 border-green-600 pb-1"
-                  : "hover:text-green-600"
-                  }`}
-              >
-                My Listings
-              </Link>
-              <Link
-                href="/favorites"
-                className={`transition-colors duration-200 ${isActive("/favorites")
-                  ? "text-green-700 font-semibold border-b-2 border-green-600 pb-1"
-                  : "hover:text-green-600"
-                  }`}
-              >
-                Favorites
-              </Link>
-              {user ? (
-                <button
-                  onClick={handleLogout}
-                  className="ml-4 px-4 py-2 bg-red-600 text-white rounded-md shadow-md hover:bg-red-700 hover:scale-105 transition-all"
-                >
-                  Logout
-                </button>
-              ) : (
+            <nav aria-label="Main" className="hidden items-center gap-8 text-base font-medium text-green-900 md:flex">
+              {links.map((l) => (
                 <Link
-                  href="/login"
-                  className="ml-4 px-4 py-2 bg-green-600 text-white rounded-md shadow-md hover:bg-green-700 hover:scale-105 transition-all"
+                  key={l.href}
+                  href={l.href}
+                  className={linkCls(l.href)}
+                  aria-current={isActive(l.href) ? "page" : undefined}
                 >
-                  Login
+                  {l.label}
                 </Link>
-              )}
+              ))}
+              {ready &&
+                (user ? (
+                  <button
+                    type="button"
+                    onClick={logout}
+                    className="ml-2 rounded-md bg-red-600 px-4 py-2 text-white shadow-md transition-colors hover:bg-red-700"
+                  >
+                    Logout
+                  </button>
+                ) : (
+                  <div className="ml-2 flex items-center gap-3">
+                    <Link href="/login" className="rounded-md px-4 py-2 text-green-800 hover:bg-green-50">
+                      Login
+                    </Link>
+                    <Link
+                      href="/signup"
+                      className="rounded-md bg-green-600 px-4 py-2 text-white shadow-md transition-colors hover:bg-green-700"
+                    >
+                      Sign up
+                    </Link>
+                  </div>
+                ))}
             </nav>
 
-            {/* Mobile menu button */}
             <button
-              className="sm:hidden p-2 rounded-md text-green-700 hover:bg-green-100 transition-colors"
+              type="button"
+              className="rounded-md p-2 text-green-800 transition-colors hover:bg-green-100 md:hidden"
               onClick={() => setMobileOpen((s) => !s)}
-              aria-label="Toggle navigation"
+              aria-label={mobileOpen ? "Close menu" : "Open menu"}
               aria-expanded={mobileOpen}
+              aria-controls="mobile-menu"
             >
-              ☰
+              {mobileOpen ? <X size={24} aria-hidden="true" /> : <Menu size={24} aria-hidden="true" />}
             </button>
           </div>
 
-          {/* Mobile Menu */}
           {mobileOpen && (
-            <div className="sm:hidden mt-3 pb-4 space-y-2 text-green-900 font-medium bg-white/80 backdrop-blur-md rounded-xl shadow-lg border border-green-100">
-              <Link
-                href="/"
-                className="block px-4 py-2 rounded hover:bg-green-50 transition-colors"
-                onClick={() => setMobileOpen(false)}
-              >
-                Home
-              </Link>
-              <Link
-                href="/listing-form"
-                className="block px-4 py-2 rounded hover:bg-green-50 transition-colors"
-                onClick={() => setMobileOpen(false)}
-              >
-                Post Ad
-              </Link>
-              <Link
-                href="/my-listings"
-                className="block px-4 py-2 rounded hover:bg-green-50 transition-colors"
-                onClick={() => setMobileOpen(false)}
-              >
-                My Listings
-              </Link>
-              <Link
-                href="/favorites"
-                className="block px-4 py-2 rounded hover:bg-green-50 transition-colors"
-                onClick={() => setMobileOpen(false)}
-              >
-                Favorites
-              </Link>
-              {user ? (
-                <button
-                  onClick={() => {
-                    handleLogout();
-                    setMobileOpen(false);
-                  }}
-                  className="w-full text-left px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
-                >
-                  Logout
-                </button>
-              ) : (
+            <nav
+              id="mobile-menu"
+              aria-label="Main"
+              className="mb-3 space-y-1 rounded-xl border border-green-100 bg-white p-2 font-medium text-green-900 shadow-lg md:hidden"
+            >
+              {links.map((l) => (
                 <Link
-                  href="/login"
-                  className="block px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
-                  onClick={() => setMobileOpen(false)}
+                  key={l.href}
+                  href={l.href}
+                  aria-current={isActive(l.href) ? "page" : undefined}
+                  className={`block rounded px-4 py-2 hover:bg-green-50 ${isActive(l.href) ? "bg-green-50 font-semibold" : ""}`}
                 >
-                  Login
+                  {l.label}
                 </Link>
-              )}
-            </div>
+              ))}
+              {ready &&
+                (user ? (
+                  <button
+                    type="button"
+                    onClick={logout}
+                    className="w-full rounded-md bg-red-600 px-4 py-2 text-left text-white hover:bg-red-700"
+                  >
+                    Logout
+                  </button>
+                ) : (
+                  <>
+                    <Link href="/login" className="block rounded px-4 py-2 hover:bg-green-50">
+                      Login
+                    </Link>
+                    <Link href="/signup" className="block rounded-md bg-green-600 px-4 py-2 text-white hover:bg-green-700">
+                      Sign up
+                    </Link>
+                  </>
+                ))}
+            </nav>
           )}
         </div>
       </header>
 
-      {/* Spacer to push content below navbar */}
-      <div className="h-16" />
+      {/* Spacer to push content below the fixed navbar */}
+      <div className="h-16" aria-hidden="true" />
     </>
   );
 }

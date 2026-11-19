@@ -1,226 +1,126 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { Suspense, useState } from "react";
+import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
-import { Formik, Form, Field, ErrorMessage } from "formik";
+import { Form, Formik } from "formik";
 import * as Yup from "yup";
-import { useAuth } from "../../context/AuthContext";
-import { Eye, EyeOff } from "lucide-react";
 
-// Password Regex: 8+ chars, 1 uppercase, 1 lowercase, 1 number, 1 special char
-const passwordRegex =
-  /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+import { errorMessage } from "../../lib/api";
+import { PASSWORD_HINT, PHONE_REGEX, confirmRule, passwordRule } from "../../lib/validation";
+import { useAuth } from "../../context/AuthContext";
+import AuthCard from "../../components/AuthCard";
+import { FormAlert, PasswordField, TextField } from "../../components/FormField";
+import GuestOnly from "../../components/GuestOnly";
 
 const SignupSchema = Yup.object().shape({
-  fullName: Yup.string()
-    .min(2, "Too Short!")
-    .max(50, "Too Long!")
-    .required("Full Name is required"),
-  email: Yup.string().email("Invalid email").required("Email is required"),
+  fullName: Yup.string().trim().min(2, "Too short").max(50, "Too long").required("Full name is required"),
+  email: Yup.string().email("Enter a valid email address").max(120).required("Email is required"),
   phone: Yup.string()
-    .matches(/^[0-9]{10,15}$/, "Invalid phone number")
+    .trim()
+    .matches(PHONE_REGEX, "Enter a valid phone number, e.g. 0712345678 or +254712345678")
     .required("Phone number is required"),
-  location: Yup.string().required("Location is required"),
-  password: Yup.string()
-    .matches(
-      passwordRegex,
-      "Password must be 8+ chars, include uppercase, lowercase, number & special char"
-    )
-    .required("Password is required"),
-  confirmPassword: Yup.string()
-    .oneOf([Yup.ref("password"), null], "Passwords must match")
-    .required("Confirm password is required"),
+  location: Yup.string().trim().max(100, "Too long").required("Location is required"),
+  password: passwordRule,
+  confirmPassword: confirmRule("password"),
 });
 
-export default function SignupPage() {
+function SignupForm() {
   const { signup } = useAuth();
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const params = useSearchParams();
+  const next = params.get("next");
+  const [generalError, setGeneralError] = useState("");
 
-  const handleSignup = async (values, { setSubmitting, setErrors }) => {
+  const handleSignup = async (values, { setSubmitting }) => {
+    setGeneralError("");
     try {
-      await signup({
-        name: values.fullName,
-        email: values.email,
-        phone: values.phone,
-        location: values.location,
-        password: values.password,
-      });
+      await signup(
+        {
+          name: values.fullName.trim(),
+          email: values.email.trim(),
+          phone: values.phone.trim(),
+          location: values.location.trim(),
+          password: values.password,
+        },
+        next
+      );
     } catch (error) {
-      console.error(error);
-      setErrors({
-        email: error.response?.data?.message || "Signup failed",
-      });
+      setGeneralError(errorMessage(error, "Sign up failed. Please try again."));
     } finally {
       setSubmitting(false);
     }
   };
 
   return (
-    <div className="relative min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 via-white to-green-100 overflow-hidden">
-      {/* Background blobs */}
-      <motion.div
-        animate={{ y: [0, 20, 0] }}
-        transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
-        className="absolute top-[-120px] left-[-120px] w-96 h-96 bg-green-300 rounded-full mix-blend-multiply filter blur-3xl opacity-30"
-      />
-      <motion.div
-        animate={{ y: [0, -20, 0] }}
-        transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
-        className="absolute bottom-[-150px] right-[-150px] w-[28rem] h-[28rem] bg-yellow-200 rounded-full mix-blend-multiply filter blur-3xl opacity-30"
-      />
-
-      {/* Form Card */}
-      <motion.div
-        initial={{ opacity: 0, y: 60 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8, ease: "easeOut" }}
-        className="relative z-10 bg-white/70 backdrop-blur-2xl shadow-2xl border border-white/30 rounded-3xl p-12 text-center max-w-md w-full"
-      >
-        <h2 className="text-3xl font-bold text-green-700 mb-6">
-          Create Your Account
-        </h2>
-
-        <Formik
-          initialValues={{
-            fullName: "",
-            email: "",
-            phone: "",
-            location: "",
-            password: "",
-            confirmPassword: "",
-          }}
-          validationSchema={SignupSchema}
-          onSubmit={handleSignup}
-        >
-          {({ isSubmitting, values, handleChange }) => (
-            <Form className="space-y-4 text-left">
-              {/* Full Name */}
-              <div>
-                <Field
-                  name="fullName"
-                  placeholder="Full Name"
-                  className="w-full px-4 py-3 border rounded-lg text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 bg-white/90"
-                />
-                <ErrorMessage
-                  name="fullName"
-                  component="div"
-                  className="text-red-500 text-sm mt-1"
-                />
-              </div>
-
-              {/* Email */}
-              <div>
-                <Field
-                  type="email"
-                  name="email"
-                  placeholder="Email"
-                  className="w-full px-4 py-3 border rounded-lg text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 bg-white/90"
-                />
-                <ErrorMessage
-                  name="email"
-                  component="div"
-                  className="text-red-500 text-sm mt-1"
-                />
-              </div>
-
-              {/* Phone */}
-              <div>
-                <Field
-                  type="tel"
-                  name="phone"
-                  placeholder="Phone Number"
-                  className="w-full px-4 py-3 border rounded-lg text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 bg-white/90"
-                />
-                <ErrorMessage
-                  name="phone"
-                  component="div"
-                  className="text-red-500 text-sm mt-1"
-                />
-              </div>
-
-              {/* Location */}
-              <div>
-                <Field
-                  name="location"
-                  placeholder="Location"
-                  className="w-full px-4 py-3 border rounded-lg text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 bg-white/90"
-                />
-                <ErrorMessage
-                  name="location"
-                  component="div"
-                  className="text-red-500 text-sm mt-1"
-                />
-              </div>
-
-              {/* Password */}
-              <div className="relative">
-                <Field
-                  type={showPassword ? "text" : "password"}
-                  name="password"
-                  placeholder="Password"
-                  className="w-full px-4 py-3 border rounded-lg text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 bg-white/90"
-                  onChange={handleChange}
-                  value={values.password}
-                />
-                <div
-                  className="absolute right-3 top-3 cursor-pointer text-gray-500"
-                  onClick={() => setShowPassword(!showPassword)}
-                >
-                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                </div>
-                <ErrorMessage
-                  name="password"
-                  component="div"
-                  className="text-red-500 text-sm mt-1"
-                />
-                <p className="text-xs text-gray-500 mt-1">
-                  Must be 8+ chars, include uppercase, lowercase, number & special character
-                </p>
-              </div>
-
-              {/* Confirm Password */}
-              <div className="relative">
-                <Field
-                  type={showConfirmPassword ? "text" : "password"}
-                  name="confirmPassword"
-                  placeholder="Confirm Password"
-                  className="w-full px-4 py-3 border rounded-lg text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 bg-white/90"
-                />
-                <div
-                  className="absolute right-3 top-3 cursor-pointer text-gray-500"
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                >
-                  {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                </div>
-                <ErrorMessage
-                  name="confirmPassword"
-                  component="div"
-                  className="text-red-500 text-sm mt-1"
-                />
-              </div>
-
-              {/* Submit Button */}
-              <motion.button
-                whileHover={{ scale: 1.03 }}
-                whileTap={{ scale: 0.97 }}
-                type="submit"
-                disabled={isSubmitting}
-                className="w-full py-3 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 shadow-md transition mt-2"
-              >
-                {isSubmitting ? "Submitting..." : "Sign Up"}
-              </motion.button>
-            </Form>
-          )}
-        </Formik>
-
-        <p className="mt-4 text-sm text-gray-600 text-center">
+    <AuthCard
+      title="Create your account"
+      footer={
+        <p>
           Already have an account?{" "}
-          <a href="/login" className="text-green-600 font-medium hover:underline">
-            Login
-          </a>
+          <Link
+            href={next ? `/login?next=${encodeURIComponent(next)}` : "/login"}
+            className="font-medium text-green-700 hover:underline"
+          >
+            Log in
+          </Link>
         </p>
-      </motion.div>
-    </div>
+      }
+    >
+      <FormAlert>{generalError}</FormAlert>
+      <Formik
+        initialValues={{ fullName: "", email: "", phone: "", location: "", password: "", confirmPassword: "" }}
+        validationSchema={SignupSchema}
+        onSubmit={handleSignup}
+      >
+        {({ isSubmitting }) => (
+          <Form className="space-y-4 text-left" noValidate>
+            <TextField name="fullName" label="Full name" autoComplete="name" />
+            <TextField name="email" label="Email" type="email" autoComplete="email" inputMode="email" />
+            <TextField
+              name="phone"
+              label="Phone number"
+              type="tel"
+              autoComplete="tel"
+              inputMode="tel"
+              hint="Buyers will use this to call or WhatsApp you."
+            />
+            <TextField name="location" label="Location" autoComplete="address-level2" hint="e.g. Nakuru" />
+            <PasswordField name="password" label="Password" autoComplete="new-password" hint={PASSWORD_HINT} />
+            <PasswordField name="confirmPassword" label="Confirm password" autoComplete="new-password" />
+            <p className="text-xs text-gray-700">
+              By signing up you agree to our{" "}
+              <Link href="/terms" className="underline">
+                Terms
+              </Link>{" "}
+              and{" "}
+              <Link href="/privacy-policy" className="underline">
+                Privacy Policy
+              </Link>
+              .
+            </p>
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              type="submit"
+              disabled={isSubmitting}
+              className="w-full rounded-lg bg-green-600 py-3 font-semibold text-white shadow-md transition hover:bg-green-700 disabled:opacity-50"
+            >
+              {isSubmitting ? "Creating account…" : "Sign up"}
+            </motion.button>
+          </Form>
+        )}
+      </Formik>
+    </AuthCard>
+  );
+}
+
+export default function SignupPage() {
+  return (
+    <Suspense>
+      <GuestOnly>
+        <SignupForm />
+      </GuestOnly>
+    </Suspense>
   );
 }

@@ -1,260 +1,249 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { useAuth } from "../../context/AuthContext";
-import api from "../../utils/api";
-import NavBar from "../../components/NavBar";
-import Footer from "../../components/Footer";
-import { Edit, Trash2, Eye, Plus, Calendar } from "lucide-react";
-// import NextImage from 'next/image';
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+import { Calendar, CheckCircle, Edit, Eye, MapPin, Plus, RotateCcw, Trash2 } from "lucide-react";
 
-export default function MyListings() {
-  const router = useRouter();
-  const { user, isAuthenticated } = useAuth();
+import api, { errorMessage } from "../../lib/api";
+import { formatDate, formatPrice } from "../../lib/format";
+import { useAuth } from "../../context/AuthContext";
+import ConfirmDialog from "../../components/ConfirmDialog";
+import Footer from "../../components/Footer";
+import ListingImage from "../../components/ListingImage";
+import NavBar from "../../components/NavBar";
+import RequireAuth from "../../components/RequireAuth";
+import { ErrorState, LoadingState } from "../../components/StatusMessage";
+import { useToast } from "../../components/Toast";
+
+function MyListingsInner() {
+  const { user } = useAuth();
+  const toast = useToast();
   const [listings, setListings] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [toDelete, setToDelete] = useState(null);
+  const [deleting, setDeleting] = useState(false);
+  const [busyId, setBusyId] = useState(null);
 
-
-  useEffect(() => {
-    if (!isAuthenticated) {
-      router.push("/login");
-      return;
-    }
-  }, [isAuthenticated, router]);
-
-  // Fetch user's listings
-  useEffect(() => {
-    if (!isAuthenticated) return;
-
-    const fetchMyListings = async () => {
-      try {
-        console.log('Fetching my listings...');
-        const res = await api.get("listings/my");
-        console.log('Listings fetched successfully:', res.data);
-        setListings(res.data);
-      } catch (error) {
-        console.error("Error fetching listings:", {
-          name: error.name,
-          message: error.message,
-          status: error.response?.status,
-          data: error.response?.data
-        });
-
-        if (error.response?.status === 422) {
-          console.log('422 Error - Backend validation issue');
-        } else if (error.response?.status === 401) {
-          router.push('/login');
-        } else if (error.message.includes('Network Error')) {
-          alert('Cannot connect to server. Make sure backend is running.')
-        }
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchMyListings();
-  }, [isAuthenticated]);
-
-  const handleDeleteListing = async (listingId) => {
-    if (!confirm("Are you sure you want to delete this listing?")) return;
-
+  const load = useCallback(async () => {
+    setLoading(true);
+    setError("");
     try {
-      await api.delete(`listings/${listingId}`, { id: listingId });
+      const res = await api.get("listings/my");
+      setListings(res.data);
+    } catch (err) {
+      if (err.response?.status !== 401) setError(errorMessage(err, "We couldn't load your listings."));
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
-      setListings(listings.filter(listing => listing.id !== listingId));
-    } catch (error) {
-      console.error("Error deleting listing:", error);
-      alert("Error deleting listing. Please try again.");
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  const confirmDelete = async () => {
+    if (!toDelete) return;
+    setDeleting(true);
+    try {
+      await api.delete(`listings/${toDelete.id}`);
+      setListings((list) => list.filter((l) => l.id !== toDelete.id));
+      toast.success("Listing deleted");
+      setToDelete(null);
+    } catch (err) {
+      toast.error(errorMessage(err, "Couldn't delete the listing."));
+    } finally {
+      setDeleting(false);
     }
   };
 
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('en-KE', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    });
+  const toggleSold = async (listing) => {
+    setBusyId(listing.id);
+    try {
+      const res = await api.patch(`listings/${listing.id}`, { is_sold: !listing.is_sold });
+      setListings((list) => list.map((l) => (l.id === listing.id ? res.data : l)));
+      toast.success(res.data.is_sold ? "Marked as sold" : "Marked as available");
+    } catch (err) {
+      toast.error(errorMessage(err, "Couldn't update the listing."));
+    } finally {
+      setBusyId(null);
+    }
   };
 
-  if (!isAuthenticated) {
-    return (
-      <div className="min-h-screen bg-white">
-        <NavBar />
-        <div className="flex items-center justify-center min-h-[60vh]">
-          <div className="text-center">
-            <h2 className="text-2xl font-bold text-green-800 mb-4">Please Login</h2>
-            <p className="text-green-600">You need to be logged in to view your listings.</p>
+  const stats = useMemo(() => {
+    const prices = listings.map((l) => Number(l.price)).filter(Number.isFinite);
+    return {
+      total: listings.length,
+      available: listings.filter((l) => !l.is_sold).length,
+      sold: listings.filter((l) => l.is_sold).length,
+      highest: prices.length ? Math.max(...prices) : null,
+      lowest: prices.length ? Math.min(...prices) : null,
+    };
+  }, [listings]);
+
+  return (
+    <main id="main" className="mx-auto max-w-7xl px-6 py-8">
+      <div className="mb-8 text-center">
+        <h1 className="mb-4 text-4xl font-bold text-green-800">My listings</h1>
+        <p className="text-lg text-green-700">Manage your agricultural products</p>
+      </div>
+
+      <div className="mb-6 rounded-lg bg-white p-6 shadow-lg">
+        <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
+          <div>
+            <h2 className="text-xl font-semibold text-green-800">Welcome back, {user?.name}!</h2>
+            <p className="text-green-800/80">
+              {stats.available} available · {stats.sold} sold
+            </p>
+          </div>
+          <Link
+            href="/listing-form"
+            className="flex items-center gap-2 rounded-lg bg-green-600 px-6 py-3 font-semibold text-white transition-colors hover:bg-green-700"
+          >
+            <Plus size={20} aria-hidden="true" />
+            Add new listing
+          </Link>
+        </div>
+      </div>
+
+      {loading ? (
+        <LoadingState label="Loading your listings…" />
+      ) : error ? (
+        <ErrorState message={error} onRetry={load} />
+      ) : listings.length === 0 ? (
+        <div className="rounded-lg bg-white py-12 text-center shadow-lg">
+          <div className="mx-auto max-w-md">
+            <h2 className="mb-2 text-xl font-semibold text-green-800">No listings yet</h2>
+            <p className="mb-6 text-green-800/80">Start by creating your first product listing!</p>
+            <Link
+              href="/listing-form"
+              className="rounded-lg bg-green-600 px-6 py-3 font-semibold text-white transition-colors hover:bg-green-700"
+            >
+              Create your first listing
+            </Link>
           </div>
         </div>
-        <Footer />
-      </div>
-    );
-  }
+      ) : (
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {listings.map((listing) => (
+            <article
+              key={listing.id}
+              className="overflow-hidden rounded-lg border border-green-100 bg-white shadow-lg transition-shadow hover:shadow-xl"
+            >
+              <div className="relative h-48">
+                <ListingImage src={listing.image_url} alt={listing.title} grayscale={listing.is_sold} />
+                <span
+                  className={`absolute left-3 top-3 rounded-full px-3 py-1 text-xs font-semibold ${
+                    listing.is_sold ? "bg-red-100 text-red-800" : "bg-blue-100 text-blue-800"
+                  }`}
+                >
+                  {listing.is_sold ? "SOLD" : "AVAILABLE"}
+                </span>
+              </div>
 
+              <div className="p-6">
+                <div className="mb-2 flex items-start justify-between gap-2">
+                  <h3 className="min-w-0 flex-1 truncate text-lg font-semibold text-green-800">{listing.title}</h3>
+                  <span className="whitespace-nowrap text-xl font-bold text-green-700">
+                    {formatPrice(listing.price)}
+                  </span>
+                </div>
+                {listing.description && (
+                  <p className="mb-4 line-clamp-2 text-sm text-gray-700">{listing.description}</p>
+                )}
+                <p className="mb-1 flex items-center gap-1 text-sm text-gray-600">
+                  <Calendar size={16} aria-hidden="true" /> Posted {formatDate(listing.created_at)}
+                </p>
+                <p className="mb-4 flex items-center gap-1 text-sm text-gray-600">
+                  <MapPin size={16} aria-hidden="true" /> {listing.location}
+                </p>
+
+                <div className="flex flex-wrap justify-between gap-2 border-t border-green-100 pt-4 text-sm">
+                  <Link
+                    href={`/listings/${listing.id}`}
+                    className="flex items-center gap-1 text-gray-700 hover:text-gray-900"
+                  >
+                    <Eye size={16} aria-hidden="true" /> View
+                  </Link>
+                  <Link
+                    href={`/listing-form?edit=${listing.id}`}
+                    className="flex items-center gap-1 text-blue-700 hover:text-blue-900"
+                  >
+                    <Edit size={16} aria-hidden="true" /> Edit
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={() => toggleSold(listing)}
+                    disabled={busyId === listing.id}
+                    className="flex items-center gap-1 text-green-700 hover:text-green-900 disabled:opacity-50"
+                  >
+                    {listing.is_sold ? (
+                      <>
+                        <RotateCcw size={16} aria-hidden="true" /> Mark available
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircle size={16} aria-hidden="true" /> Mark sold
+                      </>
+                    )}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setToDelete(listing)}
+                    className="flex items-center gap-1 text-red-700 hover:text-red-900"
+                  >
+                    <Trash2 size={16} aria-hidden="true" /> Delete
+                  </button>
+                </div>
+              </div>
+            </article>
+          ))}
+        </div>
+      )}
+
+      {listings.length > 0 && (
+        <section className="mt-8 rounded-lg bg-white p-6 shadow-lg" aria-labelledby="stats-heading">
+          <h2 id="stats-heading" className="mb-4 text-lg font-semibold text-green-800">
+            Listing statistics
+          </h2>
+          <dl className="grid grid-cols-2 gap-4 md:grid-cols-4">
+            {[
+              { label: "Total listings", value: stats.total, cls: "bg-green-50 text-green-800" },
+              { label: "Sold", value: stats.sold, cls: "bg-purple-50 text-purple-800" },
+              { label: "Highest price", value: formatPrice(stats.highest), cls: "bg-blue-50 text-blue-800" },
+              { label: "Lowest price", value: formatPrice(stats.lowest), cls: "bg-yellow-50 text-yellow-900" },
+            ].map((s) => (
+              <div key={s.label} className={`rounded-lg p-4 text-center ${s.cls}`}>
+                <dd className="text-2xl font-bold">{s.value}</dd>
+                <dt className="text-sm">{s.label}</dt>
+              </div>
+            ))}
+          </dl>
+        </section>
+      )}
+
+      <ConfirmDialog
+        open={!!toDelete}
+        title="Delete this listing?"
+        description={toDelete ? `"${toDelete.title}" will be permanently removed.` : ""}
+        confirmLabel="Delete"
+        destructive
+        busy={deleting}
+        onConfirm={confirmDelete}
+        onCancel={() => setToDelete(null)}
+      />
+    </main>
+  );
+}
+
+export default function MyListingsPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <NavBar />
-
-      <div className="max-w-7xl mx-auto px-6 py-8">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-green-800 mb-4">My Listings</h1>
-          <p className="text-green-600 text-lg">Manage your agricultural products</p>
-        </div>
-
-        {/* Stats and Action Bar */}
-        <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
-          <div className="flex flex-col md:flex-row justify-between items-center">
-            <div className="mb-4 md:mb-0">
-              <h2 className="text-xl font-semibold text-green-700">
-                Welcome back, {user?.name}!
-              </h2>
-              <p className="text-green-600">
-                You have {listings.length} active {listings.length === 1 ? 'listing' : 'listings'}
-              </p>
-            </div>
-            <button
-              onClick={() => router.push("/listing-form")}
-              className="bg-green-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-green-700 transition-colors flex items-center gap-2"
-            >
-              <Plus size={20} />
-              Add New Listing
-            </button>
-          </div>
-        </div>
-
-        {/* Listings Grid */}
-        {loading ? (
-          <div className="text-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto"></div>
-            <p className="text-green-600 mt-4">Loading your listings...</p>
-          </div>
-        ) : listings.length === 0 ? (
-          <div className="text-center py-12 bg-white rounded-lg shadow-lg">
-            <div className="max-w-md mx-auto">
-              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Plus size={32} className="text-green-600" />
-              </div>
-              <h3 className="text-xl font-semibold text-green-800 mb-2">No listings yet</h3>
-              <p className="text-green-600 mb-6">Start by creating your first agricultural product listing!</p>
-              <button
-                onClick={() => router.push("/listing-form")}
-                className="bg-green-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-green-700 transition-colors"
-              >
-                Create Your First Listing
-              </button>
-            </div>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {listings.map((listing) => (
-              <div key={listing.id} className="bg-white rounded-lg shadow-lg border border-green-100 overflow-hidden hover:shadow-xl transition-shadow">
-                {/* Listing Image Placeholder */}
-                <div className="h-48 bg-green-100 flex items-center justify-center">
-                  {listing.image_url ? (
-                    <img
-                      src={listing.image_url}
-                      alt={listing.title}
-                      width={400}
-                      height={192}
-                      className="h-full w-full object-cover"
-                    />
-                  ) : (
-                    <div className="text-center text-green-600">
-                      <div className="w-12 h-12 bg-green-200 rounded-full flex items-center justify-center mx-auto mb-2">
-                        <Eye size={24} />
-                      </div>
-                      <p className="text-sm">No image</p>
-                    </div>
-                  )}
-                </div>
-
-                {/* Listing Details */}
-                <div className="p-6">
-                  <div className="flex justify-between items-start mb-2">
-                    <h3 className="text-lg font-semibold text-green-800 truncate flex-1 mr-2">
-                      {listing.title}
-                    </h3>
-                    <span className="text-2xl font-bold text-green-600 whitespace-nowrap">
-                      KSh {listing.price}
-                    </span>
-                  </div>
-
-                  <p className="text-gray-600 text-sm mb-4 line-clamp-2">
-                    {listing.description}
-                  </p>
-
-                  <div className="flex items-center text-sm text-gray-500 mb-3">
-                    <Calendar size={16} className="mr-1" />
-                    <span>Posted {formatDate(listing.created_at)}</span>
-                  </div>
-
-                  <div className="flex items-center text-sm text-green-600 mb-4">
-                    <span className="bg-green-50 px-2 py-1 rounded">
-                      {listing.location}
-                    </span>
-                  </div>
-
-                  {/* Action Buttons */}
-                  <div className="flex justify-between pt-4 border-t border-green-100">
-                    <button
-                      onClick={() => router.push(`/listing-form?edit=${listing.id}`)}
-                      className="flex items-center gap-1 text-blue-600 hover:text-blue-800 transition-colors"
-                    >
-                      <Edit size={16} />
-                      <span className="text-sm">Edit</span>
-                    </button>
-
-                    <button
-                      onClick={() => handleDeleteListing(listing.id)}
-                      className="flex items-center gap-1 text-red-600 hover:text-red-800 transition-colors"
-                    >
-                      <Trash2 size={16} />
-                      <span className="text-sm">Delete</span>
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* Quick Stats */}
-        {listings.length > 0 && (
-          <div className="mt-8 bg-white rounded-lg shadow-lg p-6">
-            <h3 className="text-lg font-semibold text-green-800 mb-4">Listing Statistics</h3>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="text-center p-4 bg-green-50 rounded-lg">
-                <div className="text-2xl font-bold text-green-600">{listings.length}</div>
-                <div className="text-sm text-green-700">Total Listings</div>
-              </div>
-              <div className="text-center p-4 bg-blue-50 rounded-lg">
-                <div className="text-2xl font-bold text-blue-600">
-                  {Math.max(...listings.map(l => l.price), 0).toLocaleString()}
-                </div>
-                <div className="text-sm text-blue-700">Highest Price</div>
-              </div>
-              <div className="text-center p-4 bg-yellow-50 rounded-lg">
-                <div className="text-2xl font-bold text-yellow-600">
-                  {Math.min(...listings.map(l => l.price), 0).toLocaleString()}
-                </div>
-                <div className="text-sm text-yellow-700">Lowest Price</div>
-              </div>
-              <div className="text-center p-4 bg-purple-50 rounded-lg">
-                <div className="text-2xl font-bold text-purple-600">
-                  {new Set(listings.map(l => l.category_id)).size}
-                </div>
-                <div className="text-sm text-purple-700">Categories</div>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-
+      <RequireAuth>
+        <MyListingsInner />
+      </RequireAuth>
       <Footer />
     </div>
   );
 }
-
-
