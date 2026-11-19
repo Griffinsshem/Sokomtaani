@@ -46,7 +46,6 @@ export function AuthProvider({ children }) {
         password,
       });
       
-      console.log("Login response received:", response.data);
       
       const { user, token } = response.data;
 
@@ -84,6 +83,19 @@ export function AuthProvider({ children }) {
 
   // Logout
   const logout = () => {
+    // Revoke the token server-side (fire-and-forget; UI logs out immediately).
+    try {
+      const token = localStorage.getItem("token");
+      if (token) {
+        // Pass the token explicitly: it is cleared from storage right below,
+        // before axios' async request interceptor would read it.
+        api
+          .post("auth/logout", null, { headers: { Authorization: `Bearer ${token}` } })
+          .catch(() => {});
+      }
+    } catch {
+      // localStorage unavailable
+    }
     setUser(null);
     localStorage.removeItem("user");
     localStorage.removeItem("token");
