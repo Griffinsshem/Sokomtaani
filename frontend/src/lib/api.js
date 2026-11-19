@@ -1,7 +1,14 @@
 import axios from "axios";
 
+// NEXT_PUBLIC_API_URL may be set with or without the trailing "/api"
+// (e.g. "https://sokomtaani6.onrender.com"). Normalise it so every request
+// hits the Flask routes, which all live under /api.
+const RAW_API_URL =
+  process.env.NEXT_PUBLIC_API_URL || "https://sokomtaani6.onrender.com";
+const API_BASE_URL = RAW_API_URL.replace(/\/+$/, "").replace(/(\/api)?$/, "/api");
+
 const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || "https://sokomtaani6.onrender.com/api",
+  baseURL: API_BASE_URL,
   headers: {
     "Content-Type": "application/json",
   },
