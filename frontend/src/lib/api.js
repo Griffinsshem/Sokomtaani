@@ -1,44 +1,52 @@
 import axios from "axios";
 
-// NEXT_PUBLIC_API_URL may be set with or without the trailing "/api"
-// (e.g. "https://sokomtaani6.onrender.com"). Normalise it so every request
-// hits the Flask routes, which all live under /api.
-const RAW_API_URL =
-  process.env.NEXT_PUBLIC_API_URL || "https://sokomtaani6.onrender.com";
-const API_BASE_URL = RAW_API_URL.replace(/\/+$/, "").replace(/(\/api)?$/, "/api");
-
+/**
+ * The single browser API client.
+ *
+ * Requests go to "/api" on this same site; middleware proxies them to the
+ * Flask API. The session lives in an HttpOnly cookie (not readable by JS),
+ * and writes carry the CSRF token from the readable csrf_access_token cookie.
+ */
 const api = axios.create({
-  baseURL: API_BASE_URL,
-  headers: {
-    "Content-Type": "application/json",
-  },
+  baseURL: "/api",
+  headers: { "Content-Type": "application/json" },
+  timeout: 70000, // the free API host can take ~1 minute to wake up
+  xsrfCookieName: "csrf_access_token",
+  xsrfHeaderName: "X-CSRF-TOKEN",
+  withXSRFToken: true,
 });
 
-api.interceptors.request.use(
-  (config) => {
-    try {
-      const token = localStorage.getItem("token");
-      if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
+const SESSION_ENDPOINTS = ["auth/login", "auth/signup", "auth/me", "auth/logout"];
+
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    const status = error.response?.status;
+    const url = error.config?.url || "";
+    if (status === 401 && !SESSION_ENDPOINTS.some((p) => url.includes(p))) {
+      // Session expired or revoked: let AuthContext log the user out.
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new Event("auth:expired"));
       }
-    } catch {
-      // localStorage not available (e.g. SSR)
     }
-    return config;
-  },
-  (error) => Promise.reject(error)
+    return Promise.reject(error);
+  }
 );
 
-export async function fetchCategories() {
-  return api.get("/categories/");
-}
-
-export async function fetchFavorites() {
-  return api.get("/favorites/");
-}
-
-export async function removeFavorite(id) {
-  return api.delete(`/favorites/${id}`);
+/** Human-readable message for an API error. */
+export function errorMessage(error, fallback = "Something went wrong. Please try again.") {
+  if (!error) return fallback;
+  if (error.code === "ECONNABORTED") {
+    return "The server took too long to respond. It may be waking up — please try again.";
+  }
+  if (!error.response) {
+    return "Can't reach the server right now. Check your connection and try again.";
+  }
+  if (error.response.status === 429) {
+    return "Too many attempts. Please wait a minute and try again.";
+  }
+  const data = error.response.data || {};
+  return data.message || data.error || fallback;
 }
 
 export default api;
