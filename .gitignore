@@ -22,3 +22,7 @@ out/
 *.sqlite
 *.sqlite3
 backend/instance/
+
+# Local tool caches
+.impeccable/
+.pytest_cache/
