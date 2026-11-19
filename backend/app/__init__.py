@@ -1,14 +1,22 @@
 from flask import Flask
 from flask_cors import CORS
 from .extensions import db, migrate, jwt, ma
-from .config import DevelopmentConfig
+from .config import get_config
 
-def create_app(config_class=DevelopmentConfig):
+def create_app(config_class=None):
     app = Flask(__name__)
-    app.config.from_object(config_class)
+    app.config.from_object(config_class or get_config())
 
-    # Fix CORS - configure it properly
-    CORS(app, supports_credentials=True)
+    # CORS: flask-cors is the single source of truth for CORS headers.
+    # Do not add Access-Control-* headers anywhere else, or browsers will
+    # see duplicate Access-Control-Allow-Origin values and block requests.
+    # Auth uses a Bearer token (not cookies), so credentials are not needed.
+    CORS(
+        app,
+        resources={r"/api/*": {"origins": app.config["CORS_ORIGINS"]}},
+        allow_headers=["Content-Type", "Authorization"],
+        methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    )
 
     db.init_app(app)
     migrate.init_app(app, db)
@@ -41,14 +49,6 @@ def create_app(config_class=DevelopmentConfig):
                 'favorites': '/api/favorites/'
             }
         }
-
-    # Add specific CORS handling for OPTIONS requests
-    @app.after_request
-    def after_request(response):
-        response.headers.add('Access-Control-Allow-Origin', '*')
-        response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
-        response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
-        return response
 
     return app
 
