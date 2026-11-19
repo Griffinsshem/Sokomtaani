@@ -1,76 +1,74 @@
 from flask import Blueprint, request, jsonify
-from ..extension import db
-from ..models.listing import Listing
-from ..models.user import User
-from ..models.categories import Category
+from app.extensions import db
+from app.models.listings import Listing
+from app.models.user import User
+from app.schemas.listing_schema import listing_schema, listings_schema
 from flask_jwt_extended import jwt_required, get_jwt_identity
 
-listing_bp = Blueprint("listings", __name__)
+listings_bp = Blueprint("listings", __name__)
 
-@listing_bp.route("/", methods=["GET"])
-def all_listings():
-    listings = Listing.query.order_by(Listing.created_at.desc()).all()
-    return jsonify([l.to_dict() for l in listings])
+# Handle OPTIONS requests for CORS
+@listings_bp.route("/", methods=["OPTIONS"])
+def handle_options():
+    return "", 200
 
-@listing_bp.route("/<int:listing_id>", methods=["GET"])
-def single_listing(listing_id):
-    l = Listing.query.get_or_404(listing_id)
-    return jsonify(l.to_dict())
 
-@listing_bp.route("/", methods=["POST"])
-@jwt_required()
-def create_listing():
-    user_id = get_jwt_identity()
-    data = request.get_json()
-    title = data.get("title")
-    description = data.get("description")
-    price = data.get("price")
-    image_url = data.get("image_url")
-    category_id = data.get("category_id")
-    location = data.get("location")
-    contacts = data.get("contacts")
-
-    user = User.query.get_or_404(user_id)
-    category = Category.query.get(category_id) if category_id else None
-
-    listing = Listing(
-        title=title, description=description, price=price, image_url=image_url,
-        user=user, category=category, location=location, contacts=contacts
-    )
-    db.session.add(listing)
-    db.session.commit()
-    return jsonify(listing.to_dict()), 201
-
-@listing_bp.route("/mine", methods=["GET"])
-@jwt_required()
-def my_listings():
-    user_id = get_jwt_identity()
-    listings = Listing.query.filter_by(user_id=user_id).order_by(Listing.created_at.desc()).all()
-    return jsonify([l.to_dict() for l in listings])
-
-@listing_bp.route("/<int:listing_id>", methods=["PATCH"])
-@jwt_required()
-def update_listing(listing_id):
-    user_id = get_jwt_identity()
-    listing = Listing.query.get_or_404(listing_id)
-    if listing.user_id != user_id:
-        return jsonify({"msg":"Forbidden"}), 403
-    data = request.get_json()
-    if "is_sold" in data:
-        listing.is_sold = bool(data.get("is_sold"))
-    for field in ("title","description","price","image_url","category_id","location","contacts"):
-        if field in data:
-            setattr(listing, field, data.get(field))
-    db.session.commit()
-    return jsonify(listing.to_dict())
-
-@listing_bp.route("/<int:listing_id>", methods=["DELETE"])
-@jwt_required()
-def delete_listing(listing_id):
-    user_id = get_jwt_identity()
-    listing = Listing.query.get_or_404(listing_id)
-    if listing.user_id != user_id:
-        return jsonify({"msg":"Forbidden"}), 403
+@listings_bp.route('/<int:id>', methods=["DELETE"])
+def delete_current_listing(id):
+    listing = Listing.query.get(id)
+    
+    if not listing:
+        return jsonify({"error": "Listing not found"}), 404
+    
     db.session.delete(listing)
     db.session.commit()
-    return jsonify({"msg":"Deleted"}), 200
+    
+    return jsonify({"message": f"Listing {id} deleted successfully"}), 200
+
+
+# get all listings (homepage)
+@listings_bp.route("/", methods=["GET"])
+def get_all_listings():
+    listings = Listing.query.order_by(Listing.created_at.desc()).all()
+    return jsonify(listings_schema.dump(listings)), 200
+
+# get listings for the current user
+@listings_bp.route("/my", methods=["GET"])
+@jwt_required()
+def get_my_listings(): 
+    user_id = get_jwt_identity()
+    listings = Listing.query.filter_by(user_id=user_id).order_by(Listing.created_at.desc()).all()
+    return jsonify(listings_schema.dump(listings)), 200
+
+# create a new listing
+@listings_bp.route("/", methods=["POST"])
+@jwt_required()
+def create_listing():
+    data = request.get_json()
+    user_id = get_jwt_identity()
+    user = User.query.get(user_id)
+
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+
+    required_fields = ["title", "price", "category_id"]
+    for field in required_fields:
+        if field not in data:
+            return jsonify({"error": f"{field} is required"}), 400
+
+    new_listing = Listing(
+        title=data["title"],
+        description=data.get("description", ""),
+        price=data["price"],
+        image_url=data.get("image_url", ""),
+        location=user.location,
+        contact_email=user.email,
+        contact_phone=user.phone,
+        user_id=user_id,
+        category_id=data["category_id"]
+    )
+
+    db.session.add(new_listing)
+    db.session.commit()
+
+    return jsonify(listing_schema.dump(new_listing)), 201

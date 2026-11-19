@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.py[cod]
+venv/
+.venv/
+*.egg-info/
+.env
+.env.*
+
+# Node / Next.js
+node_modules/
+.next/
+out/
+
+# OS / editor
+.DS_Store
+.vscode/
+.idea/
+
+# Note: backend/instance/soko.db is intentionally still tracked. Without a
+# DATABASE_URL the backend falls back to this SQLite file, so removing it
+# would wipe the seeded data on the next Render deploy.

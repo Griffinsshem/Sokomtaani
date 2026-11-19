@@ -1,23 +1,35 @@
-from flask import Blueprint, request, jsonify
-from ..extension import db
-from ..models.categories import Category
+from flask import Blueprint, jsonify, request
+from app import db
+from app.models.categories import Category
+from flask_jwt_extended import jwt_required
 
-category_bp = Blueprint("category", __name__)
+categories_bp = Blueprint("categories", __name__, url_prefix="/api/categories")
 
-@category_bp.route("/", methods=["GET"])
+# Handle OPTIONS requests for CORS
+@categories_bp.route("/", methods=["OPTIONS"])
+def handle_options():
+    return "", 200
+
+@categories_bp.route("/", methods=["GET"])
 def get_categories():
-    cats = Category.query.all()
-    return jsonify([c.to_dict() for c in cats])
+    categories = Category.query.all()
+    return jsonify([cat.to_dict() for cat in categories]), 200
 
-@category_bp.route("/", methods=["POST"])
+@categories_bp.route("/", methods=["POST"])
+@jwt_required()
 def add_category():
     data = request.get_json()
     name = data.get("name")
+
     if not name:
-        return jsonify({"msg": "Name required"}), 400
+        return jsonify({"error": "Category name is required"}), 400
+
+    # Prevent duplicates
     if Category.query.filter_by(name=name).first():
-        return jsonify({"msg":"Category exists"}), 400
-    c = Category(name=name)
-    db.session.add(c)
+        return jsonify({"error": "Category already exists"}), 400
+
+    new_category = Category(name=name)
+    db.session.add(new_category)
     db.session.commit()
-    return jsonify(c.to_dict()), 201
+
+    return jsonify(new_category.to_dict()), 201
