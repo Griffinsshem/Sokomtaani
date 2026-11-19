@@ -1,3 +1,9 @@
+import os
+import secrets
+from app.utils.script_guard import refuse_in_production
+
+refuse_in_production("seed_listings.py")
+
 from app import create_app
 from app.models import Category, Listing, User
 from app.extensions import db
@@ -14,7 +20,8 @@ with app.app_context():
             phone="+254712345678",
             location="Nairobi, Kenya"
         )
-        test_user.set_password("REDACTED")
+        # Demo-only account; never created in production (see guard above).
+        test_user.set_password(os.environ.get("DEMO_USER_PASSWORD") or secrets.token_urlsafe(16))
         db.session.add(test_user)
         db.session.commit()
         print("Created test user: Farmer John")

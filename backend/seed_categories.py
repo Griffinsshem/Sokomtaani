@@ -1,3 +1,7 @@
+from app.utils.script_guard import refuse_in_production
+
+refuse_in_production("seed_categories.py")
+
 from app import create_app
 from app.models import Category
 from app.extensions import db
